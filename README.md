@@ -1,6 +1,6 @@
 # Hermes Agent Skills — Public Collection
 
-**English** | [**繁體中文說明 (Traditional Chinese)**](#hermes-agent-skills--公開精選集-繁體中文) | [**獨立中文檔 (README.zh-TW.md)**](./README.zh-TW.md)
+**English** | [**繁體中文說明 (Traditional Chinese)**](#hermes-agent-skills--公開精選集-繁體中文)
 
 A curated set of production-tested [Hermes Agent](https://hermes-agent.nousresearch.com) skills, extracted from real projects built at **Drizzt Studio**.
 
@@ -85,6 +85,26 @@ MIT — use them, fork them, ship them.
 ## 如何使用
 
 將任一技能資料夾放入你的 Hermes Agent 技能目錄（預設為 `~/.hermes/skills/`），或直接讓你的 AI Coding Agent 讀取 `SKILL.md` 檔案——所有檔案皆為帶有 YAML frontmatter 的標準 Markdown，亦可直接作為技術文件閱讀。
+
+## 目錄結構
+
+```text
+<skill-name>/
+├── SKILL.md          # 技能主檔 — 觸發條件、使用時機、完整步驟與踩坑紀錄
+├── references/       # 進階參考資料（API 規格表、實測紀錄，選配）
+├── scripts/          # 可直接執行的自動化或驗證腳本（選配）
+└── templates/        # 工作流 JSON 或文件模板（選配）
+```
+
+## 備註
+
+- 所有技能依原始撰寫習慣採用繁體中文或英文。中英夾雜是刻意的：作者的工作語言為中文，而程式碼與 API 規格保留英文原貌。
+- 主機名稱、憑證與本地路徑皆已通用化（如 `example.com`、`~/projects/`），不包含任何真實金鑰或私人基礎設施細節。
+- 部分技能提及特定硬體（如 RTX 5080、Apple Silicon、RTX 4070），這些是實測效能基準而非硬性需求，相關技術皆可跨平台移植。
+
+## 授權條款
+
+MIT License — Copyright (c) 2026 **Drizzt Studio**。歡迎自由使用、修改與發布。
 
 ---
 
