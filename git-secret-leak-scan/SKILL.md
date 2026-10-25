@@ -39,13 +39,13 @@ gh api "repos/<owner>/<repo>/git/trees/$t?recursive=1" \
   --jq '.tree[] | select(.type=="blob") | .path'
 ```
 
-實測 20+ 個 repo（合計近 2 GB）約 28 秒即可掃完，直接抓出哪些 repo 追蹤了 `.env`、`*.db`、`*.sqlite`、`*credentials*.json`、`*.pem`。
+這招只打 trees API 拿檔名清單、完全不 clone，整個帳號幾十個 repo 也是幾十秒內掃完，直接抓出哪些 repo 追蹤了 `.env`、`*.db`、`*.sqlite`、`*credentials*.json`、`*.pem`。
 
 | 檔名層命中樣態 | 判定 |
 |:--|:--|
 | 追蹤了真的 `.env` | 🔴 真外洩，走補救流程 |
 | 追蹤了 `*.db`／`*.sqlite` | 🔴 **高風險** —— 文字正規表達式掃描器會跳過含 NUL byte 的二進位檔（**對 DB 完全是瞎的**），必須開 DB 檢查各表資料筆數 |
-| 追蹤了 `.env.example`／`.env.template` | ⚠️ 用「值長度 vs 該平台真 key 長度」比對（例如 DeepSeek 真 key 長 35，範例檔常為 20），低於 6 成者為佔位符 |
+| 追蹤了 `.env.example`／`.env.template` | ⚠️ 用「值長度 vs 該平台真 key 長度」比對——真 key 長度請以各平台文件或後台實際 key 為準，範例檔的佔位符通常明顯偏短；低於真 key 六成者視為佔位符 |
 
 ### 第二階段：使用內建脫敏掃描器 `scripts/scan_repos_secrets.py`
 
