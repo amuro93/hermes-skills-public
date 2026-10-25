@@ -4,14 +4,14 @@
 
 這是一套經過實戰驗證的 [Hermes Agent](https://hermes-agent.nousresearch.com) 技能庫（Skills），提煉自 **Drizzt Studio** 實際開發與運行的 AI 系統。
 
-這些不是玩具範例。每一支 Skill 都是在開發過程中真正撞牆後寫下的紀錄——例如被多層 `except: return []` 靜默吞掉的系統錯誤、在 720p 下發生 FP16 注意力溢位冒出綠點的影音模型、或是把真實金鑰印進 LLM 對話紀錄造成二次外洩的掃描腳本——裡面完整封裝了最終驗證通過的解法以及當時踩過的坑。
+這些不是玩具範例。除了下方特別標註出處的一支之外，每一支 Skill 都是在開發過程中真正撞牆後寫下的紀錄——例如被多層 `except: return []` 靜默吞掉的系統錯誤、在 720p 下發生 FP16 注意力溢位冒出綠點的影音模型、或是把真實金鑰印進 LLM 對話紀錄造成二次外洩的掃描腳本——裡面完整封裝了最終驗證通過的解法以及當時踩過的坑。
 
 ---
 
 ## 收錄內容（共 12 支實戰 Skill）
 
 ### 🛡️ AI Agent 工程、資安與中文檢索（3 支）
-- **`systematic-debugging`** — 專治 AI Coding Agent「亂猜亂改」的四階段根因除錯紀律：追蹤被多層 `except: return []` 靜默吞掉的錯誤鏈，以及修復後的跨專案同型態問題清查。
+- **`systematic-debugging`** — 專治 AI Coding Agent「亂猜亂改」的四階段根因除錯紀律：追蹤被多層 `except: return []` 靜默吞掉的錯誤鏈，以及修復後的跨專案同型態問題清查。**改寫自 [obra/superpowers](https://github.com/obra/superpowers)（MIT，見該檔 frontmatter 的 `author` / `license`）—— 方法論是上游的，`references/` 裡的專案案例筆記才是我們自己補的。**
 - **`git-secret-leak-scan`** — 專為 AI Agent 設計的 GitHub 全帳號機密與 SQLite DB 兩階段稽核（內附 `scripts/scan_repos_secrets.py` 預設零明文脫敏掃描器，防止真 Key 落入 LLM Context 外洩）、金鑰驗活與無後台權限時的 API 自我撤銷、以及 Windows 透過 WSL2 `git-filter-repo` 清洗歷史的完整 SOP。
 - **`sqlite-cjk-fulltext-search`** — SQLite FTS5 `trigram` 中文全文檢索實作：解決預設分詞器搜不到中文的問題、自動分流 `<3` 字短詞回退 `LIKE`（避開 `trigram` 對兩字詞安靜回傳 0 筆的盲區），以及 WAL 跨進程隔離原則。
 

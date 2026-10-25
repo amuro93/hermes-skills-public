@@ -622,6 +622,7 @@ See `references/desc-slice-direction-bug.md` for diagnosis checklist and fix.
 | [computed-but-not-persisted.md](references/computed-but-not-persisted.md) | State modified in-memory but never saved to file/DB (common scheduled-job bug) |
 | [debug-css-media-query-brace.md](references/debug-css-media-query-brace.md) | CSS @media brace trap debug |
 | [desc-slice-direction-bug.md](references/desc-slice-direction-bug.md) | DESC + reversed + [:N] slice direction bug |
+| [fastapi-path-param-ordering.md](references/fastapi-path-param-ordering.md) | FastAPI route ordering: path-param route shadowing a specific static route |
 | [js-module-syntax-error-debug.md](references/js-module-syntax-error-debug.md) | JS module SyntaxError import chain trap |
 | [lazy-init-env-path-pattern.md](references/lazy-init-env-path-pattern.md) | Lazy init / env path pattern |
 | [multi-plugin-first-run-triage.md](references/multi-plugin-first-run-triage.md) | Multi-plugin framework first-run crash triage (6 predictable patterns: async on_load, APScheduler event loop, job context param, ConfigManager .env, DB signature, f-string multiline) |
