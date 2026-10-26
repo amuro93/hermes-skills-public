@@ -45,17 +45,26 @@ def search(keyword: str, limit: int = 5) -> list:
         with sqlite3.connect(DB_PATH) as conn:
             if len(kw) < 3:
                 # trigram 建不出索引 ⇒ 直接回退 LIKE
+                # 🔴 LIKE 的 % 與 _ 是萬用字元：使用者輸入含這兩個字元時要轉義，
+                #    否則「50%」會被當成「50 開頭」而多回一堆。
+                safe = kw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
                 rows = conn.execute(
-                    "SELECT id, content FROM messages WHERE content LIKE ? "
-                    "ORDER BY ts DESC LIMIT ?", (f"%{kw}%", limit)).fetchall()
+                    "SELECT id, content FROM messages WHERE content LIKE ? ESCAPE '\\' "
+                    "ORDER BY ts DESC LIMIT ?", (f"%{safe}%", limit)).fetchall()
             else:
+                # 🔴 FTS5 的 MATCH 參數是「查詢語法」不是純字串：kw 內含雙引號會讓
+                #    語法直接炸掉（unterminated string）。內部引號要加倍轉義再包成片語。
+                phrase = '"' + kw.replace('"', '""') + '"'
                 rows = conn.execute(
                     "SELECT m.id, m.content FROM messages_fts f "
                     "JOIN messages m ON m.id = f.rowid WHERE f.content MATCH ? "
-                    "ORDER BY m.ts DESC LIMIT ?", (f'"{kw}"', limit)).fetchall()
+                    "ORDER BY m.ts DESC LIMIT ?", (phrase, limit)).fetchall()
             return rows
-    except sqlite3.OperationalError:
-        return []   # FTS 表還沒建起來／查詢語法問題 → 降級，不要讓搜尋炸掉整個對話
+    except sqlite3.OperationalError as e:
+        # 🔴 回 None（＝查詢壞了）而不是 []（＝真的沒有）：
+        #    使用者分不出這兩種，而靜默吞例外會讓「索引建壞了」永遠沒人發現。
+        log.warning("fts search unavailable: %s", e)
+        return None
 ```
 
 - 把 `len(kw) < 3` 的分支寫成 **LIKE 回退**，不要寫成「回一個空結果」—— 使用者分不出「沒有」和「壞了」。
@@ -73,8 +82,28 @@ with sqlite3.connect(DB_PATH) as conn:
 ```
 
 - 用**獨立的（非 `content=` 外部內容）fts5 表**，插入時**自己指定 `rowid = messages.id`**。
-- 🔴 **不要**用 external-content ＋ trigger：trigger 少寫一個（尤其 DELETE／UPDATE）就造成索引與主表**靜默不同步** —— 症狀是「明明有這筆、就是搜不到」，而且只在改過／刪過的資料上發生，極難重現。
+- 🔴 **只寫 INSERT 是不完整的**：改過／刪過之後索引會留著舊內容（搜到已刪的訊息、搜不到改過的句子）。**三條寫入路徑**都要在同一 transaction 內同步，這是最不容易壞的做法：
+
+  ```python
+  # UPDATE
+  with sqlite3.connect(DB_PATH) as conn:
+      conn.execute("UPDATE messages SET content=? WHERE id=?", (content, mid))
+      conn.execute("DELETE FROM messages_fts WHERE rowid=?", (mid,))
+      conn.execute("INSERT INTO messages_fts(rowid, content) VALUES (?,?)", (mid, content))
+      conn.commit()
+
+  # DELETE
+  with sqlite3.connect(DB_PATH) as conn:
+      conn.execute("DELETE FROM messages WHERE id=?", (mid,))
+      conn.execute("DELETE FROM messages_fts WHERE rowid=?", (mid,))
+      conn.commit()
+  ```
+
+  真的需要「DB 自己維護」時，用 **`content=` 外部內容表**（SQLite 內建同步，不會漏），
+  並用 `INSERT INTO messages_fts(messages_fts) VALUES('rebuild')` 重建。
+- 🔴 **不要**用 external-content ＋ 手寫 trigger：trigger 少寫一個（尤其 DELETE／UPDATE）就造成索引與主表**靜默不同步** —— 症狀是「明明有這筆、就是搜不到」，而且只在改過／刪過的資料上發生，極難重現。
 - 同一個 transaction 保證「有訊息就有索引」，不需要補償邏輯。
+- 驗收要一次驗三種：insert 後搜得到、update 後**搜不到舊詞**、delete 後搜不到該筆。
 
 ### 4. 驗收：必須真的用中文關鍵詞搜到東西
 

@@ -25,7 +25,9 @@ python scripts/verify_chapter_qc.py \
 輸出與門檻：
 - 風格詞計數（預設門檻範例：低聲說 ≤12、可是 ≤4；其餘只報數不設限）
 - 簡體字候選（啟發式，命中需人工確認）
-- 與 refs 的 8+ 字逐字重複（0 為過）
+- 與 refs 的**最長連續共同片段**（預設 ≥8 字，`--min-repeat` 可調；0 為過）
+  - 判定方式是「從 refs 的字序列滑動延伸」，取真正的最長片段；不是把 8-gram 排序後硬接（舊版會把同一段切碎、長度低估）
+  - 稿子或 refs 解不開編碼時 **exit 2**（不是 0）——「讀不到」不可以被當成「沒有重複」
 - 中文字數統計
 
 有問題 → 改寫 → 重跑直到全過 → 再交由審稿者試讀。
@@ -39,5 +41,5 @@ python scripts/verify_chapter_qc.py \
 
 ## 四、相關 skill
 
-- `cross-chapter-consistency`——稱呼弧／時間軸／第一次事件 grep（本 skill 管機械門檻，它管敘事連貫）
+- **`cross-chapter-consistency`**（已併入 `longform-novel-zh/references/cross-chapter-consistency.md`）——稱呼弧／時間軸／第一次事件 grep（本 skill 管機械門檻，那份管敘事連貫）
 - `longform-novel-zh`——章節制寫作與記憶卡維護流程

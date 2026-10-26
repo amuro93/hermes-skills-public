@@ -1,13 +1,5 @@
----
-name: comfyui-api-scripting
-description: ComfyUI API 呼叫/出圖腳本撰寫通用知識。寫 submit+下載腳本、排 cron 出圖就用這顆。
-version: 1.0.0
-tags:
-  - comfyui
-  - api
-  - scripting
-  - 5080
----
+> 併自 `comfyui-api-scripting` skill：ComfyUI API 呼叫／出圖腳本的通用知識。
+> 維運面（共用機佇列、逾時判讀、history 陷阱）見上層 `SKILL.md`。
 
 # ComfyUI API 腳本撰寫（通用）
 

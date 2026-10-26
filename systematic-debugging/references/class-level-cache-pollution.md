@@ -41,9 +41,12 @@ class PersonaService:
 
 ## Additional: thread-local Connection + pytest-asyncio
 
-**Another related pattern:** Using `threading.local()` for SQLite connections can cause silent failures in pytest-asyncio. The fixture setup runs in one coroutine context, the test in another — both in the same thread, but `threading.local()` behavior can be unpredictable.
+**另一種相關但成因不同的情況**：用 `threading.local()` 存 SQLite 連線，在 async 測試裡會出兩種相反的問題，別把它們混為一談：
 
-**Fix:** Use a simple instance variable (`self._conn`) instead:
+- **同一個 thread 內跑多個 coroutine（pytest-asyncio 預設就是這樣）** ⇒ `threading.local()` 的值**是共用的**（因為都同一個 thread），於是多個 coroutine 會**同時用同一條連線**：交易互相交錯、`commit()` 把別人的未完成寫入一起送出去。這不是「local 掉了」，而是「local 擋不住 coroutine 併發」——**async 要用 `contextvars`，不是 threading.local**。
+- **真的換 thread 時（anyio worker thread、`asyncio.to_thread`）** ⇒ local 會是空的，程式若假設「一定已經初始化」就會拿到 `None` 而 `AttributeError`。
+
+**做法：** 連線生命週期要跟著「有意義的單位」（每個 request／每個 session）走，而不是跟著 thread 走；async 場景用 `contextvars.ContextVar`，或明確實例變數 `self._conn` 並限制單一 coroutine 使用。
 
 ```python
 # ❌ BAD — thread-local, can lose connection in pytest-asyncio

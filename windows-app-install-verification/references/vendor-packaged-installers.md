@@ -10,7 +10,7 @@
   "/c/Program Files/7-Zip/7z.exe" l "<下載的.exe"
   "/c/Program Files/7-Zip/7z.exe" x -y -o"<目標" "<下載的.exe"
   ```
-- launcher 的典型行為：**檢查依賴（例如 NVIDIA App）→ 缺少就静默退出**，
+- launcher 的典型行為：**檢查依賴（例如 NVIDIA App）→ 缺少就靜默退出**，
   不留程序、不留殘留、事件記錄乾淨。使用者看到的就是「按了同意就沒反應」。
 
 ## 解開後的典型佈局（用來判斷版本／功能）

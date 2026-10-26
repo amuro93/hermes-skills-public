@@ -130,4 +130,10 @@ def imwrite_u(p, img, q=96):
 ## 附：worked example
 
 `references/colab-h3-lane-windows.md` —— MiniMax H3 Colab 產線（uv tool CLI + clone 來的 runner + 遠端複製貼上 OAuth）
-在這台 Windows 上從零到可用的完整步驟與驗證紀錄，可直接當作同類工具的模板。
+在這台 Windows 上的建置步驟與**當時的**驗證紀錄，可當同類工具的模板。
+
+⚠️ **那份紀錄不是「已完全可用」的證明，請照實讀**：
+- OAuth 只驗到「吐授權網址＋等貼碼」就中止（刻意不完成登入、不耗額度）→ **token 落地那段沒有實測過**
+- 專案自帶的離線測試是 8 項中 4 綠 4 紅，紅的全是「Windows 沒有 POSIX exec」的 harness 問題
+- 🔴 **`--help` 跑得起來 ≠ import 全綠**：`--help` 只證明「這條 import 路徑在這台機器上過得去」。
+  真正的驗收要跑一次**會走到目標程式碼**的命令（例如 `runner.py usage`），或對每個要用的模組 `python -c "import <mod>"` 逐一驗。

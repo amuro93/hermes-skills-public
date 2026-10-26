@@ -67,5 +67,7 @@ curl http://localhost:11434/api/chat -d '{"model":"qwen3.8-27b-mlx","messages":[
 - git-bash（Windows 端）curl 送中文會壞碼——測遠端 API 時用 `--data-binary @file`；Mac 終端機原生 UTF-8 無此問題
 
 ## 遠端存取與 Cloudflare Tunnel 配置
-- ✅ **Cloudflare Tunnel 403 解法**：根因＝Ollama 防 DNS rebinding 的 **Host header 檢查**（Host 非 localhost → 403 空 body），不是 Access/Bot/WAF。解法＝`config.yml` ingress 加 `originRequest: httpHostHeader: "localhost:11434"`（欄位名 **httpHostHeader**）→ `cloudflared tunnel ingress validate` → 重啟 tunnel
+- 🔴 **Cloudflare Tunnel 403 的常見根因之一**：Ollama 防 DNS rebinding 的 **Host header 檢查**（Host 非 localhost → 403 空 body），**不是** Access/Bot/WAF。解法＝`config.yml` ingress 加 `originRequest: httpHostHeader: "localhost:11434"`（欄位名 **httpHostHeader**）→ `cloudflared tunnel ingress validate` → 重啟 tunnel
+  - ⚠️ **但 403 不是只有這一種原因**，別看到 403 就改 Host header。先做三步檢查再動設定：① `curl -sS -o /dev/null -w '%{http_code}' https://ollama.example.com/api/tags`（不加任何 header）② 直接打區網 `http://<host>:11434/api/tags` 是否 200 ③ 換一個**不存在的** Host header 重打，比較三者的回應 body 長度（Access/WAF 的 403 會帶 HTML，Ollama 的 Host 檢查是**空 body**）
+  - 🔴 **驗收要有「反向測試」**：暫時把 tunnel 關掉、或從外部打一個未經 tunnel 的位址，確認**連不到**（不然你只證明「打得通」，沒證明「沒被別人打通」）。若服務真的對外開放，請一併確認 auth 與 rate limit。
 - ✅ **Agent 接法**：model 指向 OpenAI 相容端點 **`https://ollama.example.com/v1`**（Hermes 的 openai-compatible provider 設 `base_url` 即可）

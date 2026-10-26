@@ -63,6 +63,16 @@ for tag,items in (('執行中',d.get('queue_running',[])),('等待',d.get('queue
 **沒重試的版本＝批次地雷**（一次網路抖動就陪掉整批 GPU 時間）。
 **驗證**：`python -m py_compile` ＋ `inspect.getsource()` 確認重試真的在裡面，不要只看 patch 回 success。
 
+🔴 **但 `/prompt` 不是可以無腦重試的端點**（2026-10 補）：它**不是冪等**的——
+請求送達、任務排進佇列、只是回應在路上掉了（`ConnectionResetError` 最常見的就是這種），
+重試就會**再排一張**：多燒一次 GPU、多出一張同 prompt 但 seed 不同的圖，之後用檔名前綴抓還會抓到兩張。
+
+✅ 正確形狀：
+1. 重試**前**先查一次「這批是不是已經進去了」：`GET /queue` 看 `queue_running`／`queue_pending` 有沒有同一個 `filename_prefix`／client 標記；或用 `GET /history` 掃 prefix。
+2. 有 → 當成成功，接回那個 `prompt_id` 繼續輪詢，**不要重送**。
+3. 沒有 → 才重試，並把重試次數印出來（`FAIL(2/5)`）。
+4. 送出時帶**唯一的 client id／prefix 尾碼**（例如 `filmA_shot03_r2`），這樣「同批重送」與「真的不同張」分得出來。
+
 （同場加映：用 patch 工具改含 `\r\n` 字串的 Windows 檔會被喫成真換行 → SyntaxError；
 改用 Python 做「函式級手術」：`t.index("def X(")` … `t.index("def Y(")` 整段換掉，再 `open(..., newline="")` 寫回。）
 
@@ -110,9 +120,18 @@ for p, hv in hi.items():
     for n, o in hv.get("outputs", {}).items():
         for im in o.get("images", []):
             if im.get("filename", "").startswith(prefix):
-                q = urlencode({"filename": im["filename"], "type": im.get("type", "output")})
+                # 🔴 subfolder 一定要帶：輸出在子目錄時 /view 少了它會 404
+                q = urlencode({"filename": im["filename"],
+                               "subfolder": im.get("subfolder", ""),
+                               "type": im.get("type", "output")})
                 raw = urlopen(SERVER + "/view?" + q).read()
 ```
+
+🔴 **用前綴抓「全部 history」會撈到舊批次的成品**（同一個 prefix 上次也跑過 → 你交付的是上一版的圖）。
+下載前先確認兩件事，兩個都成立才算「這次的」：
+1. **`prompt_id` 是這次 submit 拿到的那個**（或至少 `hv` 的提交時間晚於你 submit 的時間）；不要只比 prefix。
+2. 檔名帶**這次的尾碼**（`prefix_r2`／日期時間），或同一 prefix 重跑時以 server 自動加的 `_00002_` 序號為準。
+拿到的檔案再用 `stat().st_mtime` 對一次「晚於 submit 時間」，不然「成功交付舊圖」是靜默錯誤（沒有任何錯誤訊息）。
 
 🔴 **逾時判死 ≠ 任務失敗（共用機必看）**：機器在跑別人的長任務時，自己的圖會**乖乖躺在 `queue_pending`**——
 只看 `/history` 等不到就判死，下一步就是走雲端 fallback：**多花錢 ＋ 產出跟本地不一樣的第二張**，
@@ -399,7 +418,7 @@ Hermes cron 表達式的解析順序：`HERMES_TIMEZONE` env → `config.yaml` �
 
 使用者在線的互動式出圖（多模型開箱、A/B、挑圖）用這個節奏：
 
-- **前景 `timeout 560` 分段跑，一次一顆模型**：用背景程序跑出圖腳本時遇過**兩次行程静默死亡**
+- **前景 `timeout 560` 分段跑，一次一顆模型**：用背景程序跑出圖腳本時遇過**兩次行程靜默死亡**
   ——log 沒錯誤、`ps` 找不到、`/queue` 空的、圖也沒出。改成前景分段跑最穩（4 張約 1.5~2.5 分鐘）。
   **背景跑掛掉就直接前景重跑同一 tag**（同 prefix 覆蓋，不要留兩版混淆）。
 - **一項一項測**：**一個假設跑一輪、MEDIA 交他判完再跑下一輪**，不要一次把多個變因全丟上去。
@@ -610,6 +629,8 @@ print("缺:", sorted(need - avail))
   → query 形式才穩。
 - 驗證順序：`GET /api/v1/me`（看 tokenScope）→ `-r 0-4000000` 試 **206** → 全速下載 →
   `sha256sum` 對 `/api/v1/model-versions/<id>` 的 `files[].hashes.SHA256`。
+
+📎 ComfyUI API 呼叫／出圖腳本撰寫的通用知識（`/prompt` 契約、`/object_info` 反查、`SaveVideo` 輸出鍵、批次 A/B seed）→ `references/api-scripting.md`
 
 📎 端點探測與無 shell 下載的通用做法 → `references/remote-model-download-no-shell.md`
 

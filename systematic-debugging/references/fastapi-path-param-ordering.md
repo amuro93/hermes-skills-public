@@ -5,16 +5,20 @@
 A **static route with a path parameter** defined **before a more specific static route** will silently swallow requests to the specific route.
 
 ```python
-@app.get("/api/backup/download/{filename}")  # ← registered FIRST
+@app.get("/api/backup/{filename}")            # ← registered FIRST, catches everything
 async def download(filename: str):
     ...
 
-@app.get("/api/backup/auto-download")         # ← registered SECOND
+@app.get("/api/backup/auto-download")         # ← registered SECOND, never reached
 async def auto_download(key: str = ""):
     ...
 ```
 
-`/api/backup/auto-download` → matches `/api/backup/download/{filename}` with `filename="auto-download"` → **auto_download() is never called** → HTTP 404.
+`GET /api/backup/auto-download` → matches `/api/backup/{filename}` with `filename="auto-download"` → **auto_download() is never called**.
+
+⚠️ 兩條路由的**段數必須相同**才會互吃：`/api/backup/{filename}`（2 段）會吃掉 `/api/backup/auto-download`；
+但 `/api/backup/download/{filename}`（3 段）**不會**吃掉 `/api/backup/auto-download`（第 3 段一個是 `download`、一個是 `auto-download`，靜態段不符）。
+先把兩條路由的字面段數數清楚，再判斷是不是這個坑。
 
 ## Root Cause
 

@@ -23,8 +23,10 @@ tags: [hermes, state-db, sqlite, config, safety, devops]
 ### ✅ 正確查法（二選一）
 | 方法 | 指令 |
 |:--|:--|
-| **先複製再查** | `cp state.db state.db-wal state.db-shm <tmp>/ && sqlite3 <tmp>/state.db "..."`（三檔一起複製才是完整狀態） |
+| **先做一致快照再查** | Python：`src=sqlite3.connect(f"file:{live}?mode=ro", uri=True); src.backup(dst)`（SQLite **Online Backup API**，快照一致、不需停服務）；或 `sqlite3 -readonly live "VACUUM INTO '<tmp>/snap.db'"` |
 | **唯讀查** | `sqlite3 -readonly state.db "..."`；Python: `sqlite3.connect("file:<path>?mode=ro", uri=True)` |
+
+⚠️ **「`cp state.db state.db-wal state.db-shm` 三檔一起複製」不是原子操作**：複製期間 gateway 若正在寫，三個檔會來自不同時間點，副本可能前後不一致（SQLite 官方文件也說這種複製只在有 lock 保護時才安全）。它可以當「沒有其他辦法時」的備援，但**首選是 backup API／`VACUUM INTO`**。
 
 ### ❌ 不要做
 - `sqlite3.connect(live_path)`（沒帶 `mode=ro` 的那種）
@@ -35,7 +37,7 @@ tags: [hermes, state-db, sqlite, config, safety, devops]
 **已卡住的處置**：備份 → 停 gateway → 重啟（DB 本體通常沒事，**別自己動手修**）。
 
 ## 健檢（要證明「我的 DB 沒事」時照這個跑）
-複製三檔到別的槽 → 開副本：
+用 `mode=ro` 連線 + Online Backup API 做一份快照（或 `VACUUM INTO`），再開那份副本：
 ```python
 con = sqlite3.connect("file:E:/<tmp>/state.db?mode=ro", uri=True)
 con.execute("PRAGMA integrity_check").fetchone()[0]   # 要 'ok'
@@ -78,7 +80,7 @@ con.execute("PRAGMA page_count").fetchone()[0]
 python3 scripts/audit_tool_usage.py vision_analyze --days 14 --dump-args
 python3 scripts/audit_tool_usage.py vision_analyze --profile "C:/Users/<user>/AppData/Local/hermes/profiles/<name>"
 ```
-它自己會「複製三檔 → `file:...?mode=ro` 開副本 → 查完刪副本」，任何工具名都能查（`terminal`、`comfyui`…）。
+它自己會「`mode=ro` 連線 → `backup()` 做一致快照 → 查完刪快照」，任何工具名都能查（`terminal`、`comfyui`…）。只計 `role='assistant'` 的 `tool_calls`，不會把工具結果列重複算一次。
 
 ### 手動查法（腳本不夠用時）
 - `messages` 表關鍵欄位：`timestamp`（**epoch 秒**，不是 ISO 字串）、`role`、`tool_calls`（**JSON 字串**）、`tool_name`、`content`

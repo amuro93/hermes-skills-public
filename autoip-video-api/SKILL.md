@@ -16,6 +16,21 @@ prerequisites: []
 
 雲端影片/圖片生成 API。主力價值：**MSR（multi-subject-reference）多主體參考影片**——給 1~4 張參考圖，影片鎖臉換場景。雙人鎖臉已實測成功，是單純文生圖/圖生影片模型「雙人臉部混雜」問題之外的強力替代。
 
+## 本文範圍（缺什麼、你要自己補什麼）
+
+⚠️ **本文不含可直接執行的 client 程式**：`submit_msr()`／`poll()`／`download_output()` 是本產線的內部函式名，不是官方 SDK。
+要重現請按這個契約自己寫一層薄 client（約 100 行）：
+
+| 你要實作 | 契約 |
+|:--|:--|
+| 認證 | 帶 `AUTOIP_API_KEY`（header 形式請以你帳號後台／實際抓到的請求為準；此 API 沒有公開 docs） |
+| 送件 | `POST {base}/<msr endpoint>`，body 含參考圖、prompt、duration、resolution、aspect、seed、`descriptions[]` |
+| 輪詢 | 用送件回傳的 job id 輪詢狀態，完成後取輸出 URL |
+| 下載 | 把輸出 URL 的 mp4 存到本地再驗（`ffprobe` 尺寸／時長／音軌） |
+
+- 沒有公開 API 文件（`/docs`、`/openapi.json` 都 404）⇒ **端點與欄位名要用你自己帳號實抓一次確認**，不要照抄別人的教學。
+- 本文的價值在「哪些做法實測會失敗」（鎖臉裁圖、內建配音關不掉、佇列不能並行），這些換了 client 實作依然成立。
+
 ## 基本資訊
 - Key：`.env` 的 `AUTOIP_API_KEY`
 - Base：`https://autoip.app/api/v1`

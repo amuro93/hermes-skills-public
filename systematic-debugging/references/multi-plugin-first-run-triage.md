@@ -92,9 +92,9 @@ deepseek_key = (self._config.get("deepseek_api_key")
 **Root cause:** Plugins were written against a different DB API than the framework provides. Common when porting from a monolith to a framework.
 
 **Fix:**
-- Add direct-query aliases (`fetchone`, `fetchall`) that bypass namespace resolution
-- Adjust `execute` signature to match plugin convention (sql first, not pkg first)
-- Keep namespace version as `execute_ns` for future use
+- Fix the plugin call sites to the framework's real API (`fetch_one`, `execute_ns`, …) — this is the fix that survives the next refactor
+- 若短期無法改所有 call site，可加**過渡期 adapter**：名稱一樣，但內部只呼叫正式 API，並 `warnings.warn(..., DeprecationWarning)`，同時排進清理清單
+- 🔴 **不要**加「繞過 namespace 解析」的 alias 就當修好：那正是把兩套 API 並存下去的做法，下一個人會繼續用舊的那套（症狀會以「權限／多租戶查錯資料」的形式回來）
 
 **Checklist:** Search ALL plugins for `db.fetchone`, `db.fetchall`, `db.execute` — verify signatures match framework.
 
@@ -153,8 +153,9 @@ self.context = BotContext(
 **Root cause:** Plugin uses old API (e.g., old QuotaManager with `preflight_check(chat_id, qtx_id, cost=1)` returning dict) but framework's version has different signature.
 
 **Fix options:**
-- **Quick fix (MVP/testing):** Skip the integration entirely — comment out and add TODO
-- **Proper fix:** Rewrite integration to match new service's API
+- **只限一次性 spike：** 整段註解掉並在 issue 裡記一筆；**不要**在主線分支留 「comment out + TODO」
+  （下一個人會以為那是壞掉的程式碼而刪掉，或忘記它其實是功能缺口）
+- **正式做法：** 依新服務的 API 改寫整合，並補一個呼叫它的測試
 
 **Common mismatches when porting monolith to framework:**
 | Old API | New API | Symptom |

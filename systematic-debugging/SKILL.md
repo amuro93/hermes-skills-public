@@ -123,6 +123,7 @@ When `getComputedStyle(el).property` shows `none` / `0px` but the CSS file on di
 1. **The rule may be trapped inside a `@media` query** due to a missing `}` earlier in the file. Traverse the CSSOM to find where the rule actually landed — see `references/debug-css-media-query-brace.md`.
 2. Do NOT chase cache busters — the CSSOM is ground truth. If the rule is inside a non-matching `@media`, no amount of cache-busting will help.
 
+## Test-harness state: localStorage persists across runs
 
 - localStorage persists across browser_navigate calls
 - Previous test sessions leave stale tokens/auth state
@@ -227,18 +228,18 @@ When a FastAPI/backend endpoint returns HTTP 500 with no useful error detail:
 **Do:** Add diagnostic logging around the suspected function:
 
 ```python
-# Before the call that's suspected to fail:
 try:
     result = possibly_failing_function(...)
-    print(f"[debug] function result: {result}")  # ← visible in server logs
-except Exception as e:
-    import traceback
-    err = f"function 拋出例外: {e}\n{traceback.format_exc()}"
-    print(f"[debug] {err}")  # ← visible in server logs
-    raise HTTPException(status_code=500, detail=err)  # ← visible in response
+    log.info("[debug] function result: %r", result)      # ← server log only
+except Exception:
+    log.exception("[debug] function raised")             # ← full traceback in the log
+    raise HTTPException(status_code=500, detail="internal error")  # ← generic to the client
 ```
 
-This converts a silent 500 into a diagnostic one. The `print()` goes to the server's stdout/stderr (Zeabur Dashboard → Logs, Heroku logs, journald, etc.). The `detail` goes to the HTTP response body.
+This converts a silent 500 into a diagnosable one. The `log` lines go to the server's stdout/stderr (Zeabur Dashboard → Logs, Heroku logs, journald, etc.).
+
+🔴 **不要把 traceback 放進 HTTP 回應的 `detail`**：那會把檔案路徑、SQL、內部主機名、甚至連線字串送給任何打得到這個端點的人（含未登入者）。
+需要對外追蹤時，改回一個 request id，log 裡帶同一個 id，讓使用者回報 id 給你查。
 
 **Critical:** After reading the error, **remove the diagnostic logging** or replace it with proper error handling. Don't leave `print()` debugging in production.
 
@@ -629,7 +630,7 @@ See `references/desc-slice-direction-bug.md` for diagnosis checklist and fix.
 | [quick-intercept-handler-routing.md](references/quick-intercept-handler-routing.md) | Quick intercept handler routing |
 | [keyword-detection-false-positive-chinese.md](references/keyword-detection-false-positive-chinese.md) | Chinese keyword false positive debugging |
 | [telegram-bot-command-handler-debug.md](references/telegram-bot-command-handler-debug.md) | Telegram Bot command not firing |
-| [multi-plugin-triage-model-name-check.md](references/porting-model-name-check.md) | Porting: read model names from old codebase, don't guess |
+| [porting-model-name-check.md](references/porting-model-name-check.md) | Porting: read model names from old codebase, don't guess |
 | [qdrant-client-api-migration.md](references/qdrant-client-api-migration.md) | qdrant-client 1.12+ API changes |
 
 ## 📋 Design Documentation: Placeholder Naming

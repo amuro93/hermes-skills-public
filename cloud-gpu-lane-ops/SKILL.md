@@ -21,6 +21,20 @@ metadata:
 配套：花錢與送件紀律看 `systematic-debugging`（§1b-2 送前先問／§1b-3 討論沒完不送／§5 餘額實查）；
 各模型自己的 prompt 結構與失敗模式，留在該產線的 skill。
 
+## 本文範圍（缺什麼、你要自己補什麼）
+
+⚠️ **本文不含 `scripts/runner.py`**。它來自第三方 repo
+[`killkli/minimax-h3-colab-skill`](https://github.com/killkli/minimax-h3-colab-skill)（`--depth 1` clone 即可），
+本 skill 只記錄「在 Windows 上要補哪兩個 patch 才跑得動」，以及額度／session／驗收的操作知識。
+
+要重現的完整條件：
+1. clone 該 repo（`install.sh` 只裝 Codex skill 那層，**不用跑**），直接呼叫 `scripts/runner.py`
+2. 依 §4 補 `termios.py`／`tty.py` stub，並把 `os.killpg` 換成 `taskkill /T`
+3. 用 `env -u PYTHONPATH` 執行，避免吃到外層 venv
+4. 授權（OAuth）由使用者本人完成一次，憑證只留在本機 `~/.config/colab-cli/token.json`
+
+驗收標準仍以本 skill 列的四項為準（檔案本體＋`ffprobe`＋`progress*.json`＋餘額），與 runner 由誰實作無關。
+
 ## 0. 首次建置 runbook（從零到能跑一支片）— Windows 實測 2026-09-29
 
 **A. 一次性建置**

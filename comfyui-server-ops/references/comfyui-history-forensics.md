@@ -47,7 +47,11 @@ cd <hermes_home> && python3 scripts/list_comfy_history.py
 再用**輸出檔名**把那批過濾出來。這是**身分／數值驗證，不是 vision 判圖**，可以自己做。
 
 ```python
-hi = json.loads(urlopen(f"{SERVER}/history?max_items=80", headers=H).read())
+# urlopen 沒有 headers= 這個參數（會 TypeError）；要用 Request 包起來
+from urllib.request import Request, urlopen
+
+req = Request(f"{SERVER}/history?max_items=80", headers=H)
+hi = json.loads(urlopen(req).read())
 for pid, node in hi.items():
     outs = [it["filename"] for _, o in (node.get("outputs") or {}).items()
             for k in ("images", "videos", "gifs") for it in (o.get(k) or [])]
