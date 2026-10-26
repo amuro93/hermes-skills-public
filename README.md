@@ -8,7 +8,7 @@ These are not toy examples. Each skill was written after hitting an actual wall 
 
 One of them is an exception and is labelled as such: **`systematic-debugging`** is adapted from an existing upstream MIT-licensed skill. Its frontmatter and its entry below say so, rather than presenting it as work written from scratch here.
 
-## What's Inside (16 Skills)
+## What's Inside (17 Skills)
 
 ### 🛡️ Agentic Engineering, Security & Data
 - **`systematic-debugging`** — Four-phase root-cause discipline for AI coding agents, tracing masked errors across silent `except: return []` chains, and project-wide post-fix sweeps. **Adapted from [obra/superpowers](https://github.com/obra/superpowers) (MIT — see `author` / `license` in its frontmatter); the method is upstream, the source-specific notes in `references/` were added from our own projects.**
@@ -26,6 +26,7 @@ One of them is an exception and is labelled as such: **`systematic-debugging`** 
 
 ### 🎬 ComfyUI & Multimodal Video Generation
 - **`comfyui-api-scripting`** — Writing reliable headless ComfyUI API runners (`POST /prompt`, `/object_info` schema inspection, `SaveVideo` output key traps, and batch A/B seed testing).
+- **`comfyui-server-ops`** — Running a *shared* ComfyUI box over HTTP: queue discipline so you don't monopolise the GPU, the `/history/{pid}` returning `{}` trap, why a timeout is not a failure (read `/queue` first), partial-result persistence so a killed wrapper doesn't lose the batch, cron scheduling and timezone pitfalls, downloading models when you have no shell on the box, and node-set diffing after a ComfyUI upgrade.
 - **`ltx25-video-generation`** — Lightricks LTX-2.5 22B audio-video generation on 16GB VRAM (NVFP4 transformer + INT8 Gemma-4, duration-head auto-length, and NAG + DualCFG workflows).
 - **`minimax-h3-comfyui`** — MiniMax H3 24fps audio-video generation on 16GB/12GB GPUs: pruned GGUF vs safetensors quantisation, FastH3 8-step V2 distillation, `BlockSparseAttention` dotted-key API syntax, and verified HuggingFace download scripts.
 - **`autoip-video-api`** — AutoIP MSR video API integration: multi-subject reference face locking, single-person shot splitting, and ffmpeg `atempo` voiceover pacing fixes.
@@ -66,7 +67,7 @@ MIT — use them, fork them, ship them.
 
 這些不是玩具範例。除了下方特別標註出處的一支之外，每一支 Skill 都是在開發過程中真正撞牆後寫下的紀錄——例如被多層 `except: return []` 靜默吞掉的系統錯誤、在 720p 下發生 FP16 注意力溢位冒出綠點的影音模型、或是把真實金鑰印進 LLM 對話紀錄造成二次外洩的掃描腳本——裡面完整封裝了最終驗證通過的解法以及當時踩過的坑。
 
-## 收錄內容（共 16 支實戰 Skill）
+## 收錄內容（共 17 支實戰 Skill）
 
 ### 🛡️ AI Agent 工程、資安與中文檢索（4 支）
 - **`systematic-debugging`** — 專治 AI Coding Agent「亂猜亂改」的四階段根因除錯紀律：追蹤被多層 `except: return []` 靜默吞掉的錯誤鏈，以及修復後的跨專案同型態問題清查。**改寫自 [obra/superpowers](https://github.com/obra/superpowers)（MIT，見該檔 frontmatter 的 `author` / `license`）—— 方法論是上游的，`references/` 裡的專案案例筆記才是我們自己補的。**
@@ -82,8 +83,9 @@ MIT — use them, fork them, ship them.
 - **`windows-python-tool-compat`** — 外部 Python 工具在 Windows 上跑不起來的逐項解法：POSIX 專屬 import（`termios`／`tty`／`fcntl`）要 stub 進該工具自己的 venv `site-packages`、MSYS 與原生路徑不互轉的混淆，以及 `PYTHONPATH` 與程序樹收尾。
 - **`windows-app-install-verification`** — 在 Windows 裝第三方 app／驅動之後怎麼驗收才算完成：開跑前先講清楚會跳 UAC 與可能要重開機、廠商 launcher 的解壓與登錄檔殘留檢查、以及動共用 GPU／服務前先確認所有權。
 
-### 🎬 ComfyUI 與多模態影音生成工程（5 支）
+### 🎬 ComfyUI 與多模態影音生成工程（6 支）
 - **`comfyui-api-scripting`** — 撰寫穩定無頭 ComfyUI API 腳本的規範（`POST /prompt`、`/object_info` 參數規格反查、`SaveVideo` 輸出鍵在 `images` 而非 `videos` 的陷阱，以及多組 Seed 批次測試）。
+- **`comfyui-server-ops`** — 用 HTTP API 操作一台**共用** ComfyUI 產線機的維運知識：佇列紀律（不要連續霸佔 GPU）、`/history/{pid}` 回 `{}` 的假死陷阱、為什麼 timeout 不等於任務失敗（先讀 `/queue`）、成果 partial 落盤讓被砍掉的 wrapper 不至於整批歸零、cron 排程與時區坑、沒有 shell 時怎麼把模型弄進機器，以及 ComfyUI 升級後的節點集合 diff 驗證。
 - **`ltx25-video-generation`** — Lightricks LTX-2.5 22B 影音同步生成於 16GB VRAM 的完整配置（NVFP4 Transformer + INT8 Gemma-4、duration-head 自動片長與 NAG + DualCFG 工作流）。
 - **`minimax-h3-comfyui`** — MiniMax H3 24fps 影音生成完整指南（16GB/12GB 顯卡配置）：Pruned GGUF 與 safetensors 量化選型、FastH3 8-Step V2 蒸餾加速、`BlockSparseAttention` 點號展開參數防 720p FP16 溢位綠點、真實底片膚質去油光 Prompt，以及驗證下載腳本。
 - **`autoip-video-api`** — AutoIP MSR 鎖臉影片生成 API 整合：多主體參考鎖臉、單人分鏡防臉崩原則，以及使用 ffmpeg `atempo` 修正配音語速過快問題。
