@@ -1,0 +1,8 @@
+# local run artefacts
+__pycache__/
+*.py[cod]
+# never commit credentials or local databases
+.env
+.env.*
+*.db
+*.sqlite3
