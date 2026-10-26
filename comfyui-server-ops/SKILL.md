@@ -549,6 +549,7 @@ print("缺:", sorted(need - avail))
 2. ⚠️ **userdata API 寫檔**：`POST /api/userdata/{file}` 可寫 user 目錄，但
    🔴 **含 `/` 的路徑回 405** → 子目錄要 **URL-encode 成 `%2F`**；`..` 一律 403。
    它只能寫 `user/default/` 底下——Manager 的目錄不在那裡。
+   ⚠️ **前提限定**：這招只適用「你自己擁有、或機器主人明確授權你操作」的實例；在別人的機器上寫檔＝越權，不要做。
 3. ⚠️ **`FL_HFDatasetDownloader` 節點**（Fill-Nodes）：`repo_id` + `repo_type` + `local_dir`（絕對路徑）
    + `download_trigger=True` → 抓整個 HF repo。**只適合小而快的下載；>10GB 不要走它**。
    - 🔴 **它下載整個 repo，不能挑檔** → 選 repo 前先量總大小

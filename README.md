@@ -54,8 +54,9 @@ Drop a directory into your Hermes Agent skills path (typically `~/.hermes/skills
 ## Notes
 
 - All skills are in Traditional Chinese or English as originally written. Mixed-language is intentional: the author's working language is Chinese, and API documentation quotes stay in their original form.
-- No credentials are included. Hostnames, paths and account-specific details have been generalised (`example.com`, `~/projects/`, `<user>`); internal topology, incident logs and private asset names were deliberately removed rather than rewritten.
+- No credentials are included. Hostnames, paths and account-specific details have been generalised (`example.com`, `~/projects/`, `<user>`); internal topology, incident logs and private asset names were deliberately removed rather than rewritten. Code samples use generic identifiers (`myapp.handlers.storage`, `/api/items/create`) even where the underlying case was a real one.
 - Each skill states its own scope: what was actually exercised, and what still has to be supplied or verified by you (some skills reference a client/runner that is **not** bundled).
+- Some skills point at the author's **internal** skills that are not part of this collection (`hermes-windows-migration`, `hermes-fixed-cost-trim`, `local-path-migration`, `api-spend-forensics`, `hermes-provider-failover`, `hermes-env-secrets`, `hermes-upgrade-bitwarden`). Those references are labelled 「**本系列未收錄**」 inline — treat them as provenance notes, not as links you can follow.
 - Some skills reference hardware (RTX 5080, Apple Silicon, 4070). Those are performance notes, not requirements — the techniques are portable.
 
 ## Licence
@@ -118,8 +119,9 @@ MIT — use them, fork them, ship them.
 ## 備註
 
 - 所有技能依原始撰寫習慣採用繁體中文或英文。中英夾雜是刻意的：作者的工作語言為中文，而程式碼與 API 規格保留英文原貌。
-- 不含任何憑證。主機名稱、路徑與帳號相關細節皆已通用化（`example.com`、`~/projects/`、`<user>`）；內部拓樸、事故紀錄與私人資產名是**直接移除**，不是改寫成別的代稱。
+- 不含任何憑證。主機名稱、路徑與帳號相關細節皆已通用化（`example.com`、`~/projects/`、`<user>`）；內部拓樸、事故紀錄與私人資產名是**直接移除**，不是改寫成別的代稱。程式碼範例一律用通用識別碼（`myapp.handlers.storage`、`/api/items/create`），即使原始案例是某個真實專案。
 - 每支 skill 各自標明範圍：哪些真的跑過、哪些要你自己補或自己驗（部分 skill 引用的 client／runner **沒有**隨附）。
+- 部分內容引用作者**內部**、未隨本系列公開的 skill（`hermes-windows-migration`、`hermes-fixed-cost-trim`、`local-path-migration`、`api-spend-forensics`、`hermes-provider-failover`、`hermes-env-secrets`、`hermes-upgrade-bitwarden`）。這些地方都已就地標「**本系列未收錄**」——請當成出處說明，不是可以點過去的連結。
 - 部分技能提及特定硬體（如 RTX 5080、Apple Silicon、RTX 4070），這些是實測效能基準而非硬性需求，相關技術皆可跨平台移植。
 
 ## 授權條款

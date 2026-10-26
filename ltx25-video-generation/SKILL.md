@@ -1,6 +1,6 @@
 ---
 name: ltx25-video-generation
-description: LTX-2.5 出片 — 5080 原生/Sulphur workflow + duration head。
+description: Use when 在 ComfyUI 跑 LTX-2.5 出片（5080 原生／Sulphur workflow、duration head 自動片長）。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -14,7 +14,7 @@ tags:
 metadata:
   hermes:
     tags: [ltx, ltx-2.5, video-generation, comfyui, duration-head, 5080]
-    related_skills: [minimax-h3-local-workflow, comfyui-ltx-video]
+    related_skills: [minimax-h3-comfyui, comfyui-server-ops]
 ---
 
 # LTX-2.5 影片生成（5080 ComfyUI）

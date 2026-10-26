@@ -4,7 +4,7 @@
 
 A `ReplyKeyboardMarkup` button like `KeyboardButton("📸 一鍵拍照")` does NOT trigger a `CommandHandler` or `CallbackQueryHandler`. Instead, pressing it **sends the button text as a regular Telegram text message**, which goes through the catch-all `MessageHandler(filters.TEXT, ...)` → eventually into the AI chat flow.
 
-If the AI responds with chat + function tags (e.g. `[DRAW:...]` but also `[LEDGER_SEARCH:...]`), the user sees:
+If the AI responds with chat + function tags (e.g. `[RENDER:...]` but also `[SEARCH_<TYPE>:...]`), the user sees:
 1. An image
 2. Irrelevant search results (from history contamination)
 3. AI chat advancing the narrative when the user just wanted a photo
@@ -16,7 +16,7 @@ User presses "📸 一鍵拍照" (keyboard button)
   → Telegram sends text message "📸 一鍵拍照"
     → MessageHandler(filters.TEXT, ...)
       → group_city_weather_handler → chat_handler
-        → AI generates chat + [DRAW:...] + [LEDGER_SEARCH:...]  ❌
+        → AI generates chat + [RENDER:...] + [SEARCH_<TYPE>:...]  ❌
         → Chat advances narrative, search results sent
 ```
 
@@ -29,7 +29,7 @@ Add a text-match check in `quick_intercept.py`'s `check_quick_intercepts()` that
 ```python
 # 📸 一鍵拍照（文字按鈕 → 直接拍照，不進 AI 聊天）
 if "一鍵拍照" in user_text or "📸 一鍵拍照" in user_text:
-    from secretary_bot_core.handlers.ai_chat_gemini import take_photo
+    from myapp.handlers.ai_chat import take_photo
     await take_photo(update, context)
     return True  # ← chat_handler returns early, AI never runs
 ```

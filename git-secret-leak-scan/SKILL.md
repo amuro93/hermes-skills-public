@@ -3,6 +3,7 @@ name: git-secret-leak-scan
 description: Use when 懷疑 API key 外洩或查 GitHub repo 含 secrets/DB。批次掃描、驗活、WSL2 git-filter-repo 歷史清理。
 version: 1.0.0
 author: Drizzt Studio
+license: MIT
 tags: [security, git, secret-scan, git-filter-repo, wsl2, devsecops]
 ---
 
@@ -91,6 +92,7 @@ python scripts/scan_repos_secrets.py /path/to/cloned_repos -o secret_scan_result
 2. **注意 CDN 快取與傳播延遲**：
    - 部分平台（如 SendGrid `/v3/scopes`）有邊緣快取，刪除 key 後仍會在短時間內回 `200`。應改打 `user/account` 端點，並在執行 `DELETE` 後等待 60~90 秒再複測確認轉為 `401`。
 3. **無法登入後台時的自救撤銷法（API Self-Revoke）**：
+   - ⚠️ **前提限定**：只在「這把 key 是你自己的、帳號是你有權操作的」時使用。它不是繞過任何權限，用途只有一個：你已經進不去後台，但需要緊急作廢自己那把外洩的 key。
    - 若忘記平台後台密碼、但外洩的正好是一把具備管理權限（Full Access）的 API key，可直接用該把 key 呼叫平台的列出與刪除端點（例如 `GET /v3/api_keys` 取得 ID 後，打 `DELETE /v3/api_keys/<id>` → `204`），不需登入網頁後台即可將帳號下所有有效 key 徹底銷毀。
 
 ---

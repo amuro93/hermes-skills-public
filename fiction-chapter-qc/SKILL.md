@@ -1,6 +1,9 @@
 ---
 name: fiction-chapter-qc
-description: 小說章節/番外交稿試讀前載入 — 風格詞計數、簡體字、跨章逐字重複、字數門檻 QC 驗證。
+description: Use when 小說章節／番外交稿試讀前要跑 QC（風格詞、簡體字、跨章逐字重複、字數／空稿門檻）。
+version: 1.0.0
+author: Drizzt Studio
+license: MIT
 ---
 
 # ✅ 小說章節／番外 QC 驗證（Fiction Chapter QC）

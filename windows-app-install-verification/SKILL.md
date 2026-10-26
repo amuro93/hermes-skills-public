@@ -9,7 +9,7 @@ tags: [windows, install, powershell, driver, uac, verification]
 metadata:
   hermes:
     tags: [windows, install, powershell, driver, uac, verification]
-    related_skills: [hermes-windows-migration, windows-python-tool-compat, hermes-env-secrets]
+    related_skills: [windows-python-tool-compat]
 ---
 
 # 在這台 Windows 主機安裝第三方 App／驅動元件
@@ -20,7 +20,7 @@ metadata:
 - 使用者自己裝卻「按了同意就沒反應」、重試與重開機都一樣。
 - 裝的東西會碰系統層（驅動、服務、虛擬裝置、帶來重開機風險）。
 
-適用：任何**不是 Hermes 本體**的外部應用；Hermes 自身的升級／修復走 `hermes-upgrade-bitwarden`。
+適用：任何**不是 Hermes 本體**的外部應用；Hermes 自身的升級／修復走作者內部的 `hermes-upgrade-bitwarden` 流程（**本系列未收錄**）。
 
 ## 鐵律
 
@@ -78,7 +78,7 @@ NVIDIA 等大廠的 `.exe` 常是**自解壓縮包＋前端 launcher**，launche
 ### 4. 提權執行（腳本要純 ASCII）
 
 > 從 git-bash 驅動 PowerShell 的兩個固定坑（inline `$_`／反引號被 MSYS 吃掉、
-> **PS 5.1 在中文系統把 UTF-8 .ps1 當 Big5 → 整支腳本連第一行都不跑**）詳見 `hermes-windows-migration` 的踩坑速查。
+> **PS 5.1 在中文系統把 UTF-8 .ps1 當 Big5 → 整支腳本連第一行都不跑**）詳見作者內部的 `hermes-windows-migration` 踩坑速查（**本系列未收錄**）。
 > 本 skill 下的原則：**一律寫成純 ASCII 的 `.ps1` 再 `-File`**，中文訊息改成輸出到檔案用英文寫。
 
 ```powershell

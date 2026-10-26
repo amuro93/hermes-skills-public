@@ -1,8 +1,8 @@
 ---
 name: longform-novel-zh
-description: Draft long Traditional Chinese novels by chapter.
+description: Use when 寫繁體中文長篇小說（分章產出、記憶卡、跨章一致性）。
 version: 1.0.0
-author: Min-I
+author: Drizzt Studio
 license: MIT
 platforms: [macos, linux, windows]
 metadata:

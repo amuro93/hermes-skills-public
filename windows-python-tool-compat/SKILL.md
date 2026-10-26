@@ -8,7 +8,7 @@ tags: [windows, python, venv, porting, compat]
 metadata:
   hermes:
     tags: [windows, python, venv, porting, compat]
-    related_skills: [hermes-windows-migration]
+    related_skills: [windows-app-install-verification]
 ---
 
 # 在 Windows 主機上跑外部 Python 工具：標準相容處理
@@ -54,7 +54,7 @@ env -u PYTHONPATH <tool> ...
 ```
 別用 `PYTHONPATH=` 空字串（可能被當成空路徑項）；`env -u` 才是乾淨移除。
 
-> 這個錯誤指紋跟 `hermes-windows-migration` 裡記的「`hermes update` 換 Python → ABI 不符」**一模一樣、病因不同**：
+> 這個錯誤指紋跟 `hermes-windows-migration`（**本系列未收錄**）裡記的「`hermes update` 換 Python → ABI 不符」**一模一樣、病因不同**：
 > 差別在 traceback 的套件路徑指向「誰的 venv」。別看到 pydantic_core 就直接往 ABI 那條查。
 
 ## 步驟 2：POSIX-only stdlib 模組缺失 → 補最小 stub

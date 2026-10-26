@@ -3,6 +3,7 @@ name: hermes-local-state-safety
 description: Use when 查 Hermes 本地狀態檔（state.db／WAL／config）或要用腳本撈裡面的紀錄。
 version: 1.0.0
 author: Drizzt Studio
+license: MIT
 tags: [hermes, state-db, sqlite, config, safety, devops]
 ---
 
@@ -120,8 +121,8 @@ ORDER BY m.timestamp;
 - 🔴 **`provider=xai` 與 `provider=xai-oauth` 是兩種帳**：前者吃 **API 帳**（按 token 計費），後者走 **OAuth／訂閱**。
   2026-09-22 使用者親自更正（他看到某個 profile 的主模型是 grok-4.6 就走 OAuth，跟 API 帳無關）
   → 查「誰在燒錢」時**先確認 provider 字串**，不要看到模型名就定罪。
-- 跨 agent／跨機的完整對帳流程（憑證指紋盤點、非 Hermes 消費者、peer fan-out、回報四件套）→ `api-spend-forensics`
-  （附 `scripts/audit_provider_calls.py`：掃所有 profile 的 `agent.log` 按日／provider／session 聚合 calls 與 tokens）。
+- 跨 agent／跨機的完整對帳流程（憑證指紋盤點、非 Hermes 消費者、peer fan-out、回報四件套）→ 屬作者內部的 `api-spend-forensics`（**本系列未收錄**；
+  它附的 `scripts/audit_provider_calls.py` 會掃所有 profile 的 `agent.log` 按日／provider／session 聚合 calls 與 tokens）。
 
 ## 用別人的審計工具前：先看它怎麼開 DB
 ```bash
@@ -133,12 +134,12 @@ grep -n "sqlite3\|mode=ro\|immutable" <script.py>
 ## config.yaml 的寫入紀律
 - **不吃 patch/write**（工具會擋）→ 走 CLI：`hermes config set <key> "<json 陣列或值>"`
 - 改前先 `cp config.yaml config.yaml.bak_<reason>_<date>`；改後**讀回來驗**（`search_files` 看 key 真的在檔案裡 —— `hermes config get` 的輸出不好 parse）。
-- ⚠️ CLI 可能警告「`<key>` is not a recognized config key … may not read it」——**這個警告不一定是真的**。先去原始碼確認誰讀那個 key（實例：`skills.disabled` 由 `agent/skill_utils.get_disabled_skill_names()` 讀，警告是假的；詳 `hermes-fixed-cost-trim`）。
+- ⚠️ CLI 可能警告「`<key>` is not a recognized config key … may not read it」——**這個警告不一定是真的**。先去原始碼確認誰讀那個 key（實例：`skills.disabled` 由 `agent/skill_utils.get_disabled_skill_names()` 讀，警告是假的；詳作者內部的 `hermes-fixed-cost-trim`，**本系列未收錄**）。
 
 ## 檔案在哪（Windows 地端）
 - `state.db` / `state.db-wal` / `state.db-shm` 都在 **profile 目錄**（`<hermes_home>/profiles/<name>/`；有些人會把 profile 目錄 junction 到別的磁碟，只要路徑指得到都可以）。
 - 輸出／素材目錄可以 junction 到別的磁碟，但 **DB 本身不要跟著搬**（不要順手搬 —— 搬動中的 DB 是最容易壞的狀態）。
 
 ## 相關
-- `local-path-migration`：路徑／junction 與 Windows 路徑坑
-- `hermes-fixed-cost-trim`：靠 state.db 的呼叫紀錄判斷候選（該工具已用 `mode=ro`）
+- `local-path-migration`、`hermes-fixed-cost-trim`：路徑／junction 與 Windows 路徑坑、固定成本瘦身 —— **皆屬作者內部 skill，本系列未收錄**
+- 本系列可搭配：`windows-python-tool-compat`（外部工具的 import／路徑坑）、`sqlite-cjk-fulltext-search`（DB 查詢與索引）

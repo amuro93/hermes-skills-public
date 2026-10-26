@@ -8,7 +8,7 @@ When a Python module reads from `os.environ` at import time to construct a file 
 # ❌ BAD: Runs at import time, before dotenv loads
 _REF_IMAGE_FILE = os.path.join(
     os.environ.get("BOT_DATA_DIR", "/data"),  # → "/data" until dotenv runs
-    "video_ref_image_5080.json"
+    "ref_images_<instance>.json"
 )
 ```
 
@@ -29,7 +29,7 @@ def _get_ref_image_file() -> str:
             data_dir = BOT_DATA_DIR
         except ImportError:
             data_dir = os.environ.get("BOT_DATA_DIR", "/data")
-        _REF_IMAGE_FILE = os.path.join(data_dir, "video_ref_image_5080.json")
+        _REF_IMAGE_FILE = os.path.join(data_dir, "ref_images_<instance>.json")
     return _REF_IMAGE_FILE
 ```
 

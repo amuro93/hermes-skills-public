@@ -3,6 +3,7 @@ name: autoip-video-api
 description: Use when AutoIP (autoip.app) API — MSR 影片鎖臉、雙人、配音坑、點數計價查詢。
 version: 1.0.0
 author: Drizzt Studio
+license: MIT
 tags:
   - autoip
   - video

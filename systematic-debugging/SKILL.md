@@ -7,7 +7,7 @@ license: MIT
 metadata:
   hermes:
     tags: [debugging, troubleshooting, problem-solving, root-cause, investigation]
-    related_skills: [test-driven-development, writing-plans, subagent-driven-development]
+    related_skills: [test-driven-development]
 ---
 
 # Systematic Debugging
@@ -171,7 +171,7 @@ client = TestClient(app)
 
 # Use the live token/credentials
 headers = {"Authorization": "Bearer <token>"}
-r = client.post("/api/divine/character", json={"character": "愛"}, headers=headers)
+r = client.post("/api/items/create", json={"name": "example"}, headers=headers)
 
 # TestClient propagates the FULL Python exception, not just the HTTP 500
 # This reveals NameError, ImportError, TypeError, etc. that clouds obscure
@@ -357,7 +357,7 @@ search_files("similar_pattern", path="src/", file_glob="*.py")
 - Simplest possible reproduction
 - Automated test if possible
 - MUST have before fixing
-- Use the `test-driven-development` skill
+- Use the `test-driven-development` skill（上游 obra/superpowers 系列，本系列未收錄）
 
 ### 2. Implement Single Fix
 
@@ -444,7 +444,7 @@ If you catch yourself thinking:
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question the pattern, don't fix again. |
 
-## ⚠️ Don't Assume \"User Didn't Restart\" (When They Say They Did)
+## ⚠️ Don't Assume "User Didn't Restart" (When They Say They Did)
 
 **Pitfall:** When a user reports your code fix isn't working after you made changes, the easiest (and wrong) hypothesis is "you need to restart the bot/server."
 
@@ -463,12 +463,12 @@ If you catch yourself thinking:
 
 ## ⚠️ AI Self-Reinforcing Loop: Function Tags in Conversation History
 
-**Symptom:** The AI keeps outputting the same function tag (`[LEDGER_SEARCH: XXX]`, `[DRAW: ...]`, etc.) in every response, even when the user didn't ask for it. The behavior persists across restarts.
+**Symptom:** The AI keeps outputting the same function tag (`[SEARCH: ...]`, `[RENDER: ...]`, etc.) in every response, even when the user didn't ask for it. The behavior persists across restarts.
 
-**Root Cause:** The AI's raw response (including function tags like `[LEDGER_SEARCH: 房貸]`) is saved directly to the conversation history database. On the next turn, the AI sees its own tagged response in the history and thinks it should output the same tag again → **self-reinforcing loop**.
+**Root Cause:** The AI's raw response (including function tags like `[SEARCH: <query>]`) is saved directly to the conversation history database. On the next turn, the AI sees its own tagged response in the history and thinks it should output the same tag again → **self-reinforcing loop**.
 
 ```
-Turn 1: AI outputs "[DRAW:...] [LEDGER_SEARCH:房貸] 好的～"
+Turn 1: AI outputs "[RENDER:...] [SEARCH:<query>] 好的～"
          ↓  saved to history with tags
 Turn 2: AI sees history → copies the pattern → outputs tags again
          ↓  saved again with tags
@@ -479,7 +479,7 @@ Turn N: Infinite loop 🔄
 
 ```python
 clean_for_history = re.sub(
-    r'\[(?:DRAW|DARKDRAW|LEDGER_\w+|EXPENSE|INCOME|SEARCH|WEATHER|VIDEO...):.*?\]',
+    r'\[(?:RENDER|DARKRENDER|SEARCH_\w+|EXPENSE|INCOME|WEATHER|VIDEO...):.*?\]',
     '', ai_reply, flags=re.IGNORECASE | re.DOTALL
 ).strip()
 await save_message(user_id, chat_id, "assistant", clean_for_history, ...)
@@ -498,17 +498,9 @@ await save_message(user_id, chat_id, "assistant", clean_for_history, ...)
 
 **Problem:** Context compaction summaries (written by previous agent instances across context windows) can contain claims that sound definitive but were never actually verified.
 
-**Example (real, 2026-06-05):** Context compaction asserted "測試 Web 面板 Veo 成功生成影片" — but investigation showed NO video files were saved to disk. The "success" was an optimistic reading of an intermediate API result, not an end-to-end confirmed save.
+**Example:** A compaction summary asserted "video generation succeeded" — but investigation showed NO video files were saved to disk. The "success" was an optimistic reading of an intermediate API result, not an end-to-end confirmed save.
 
 **Rule:** Treat any claim in a context compaction that describes a concrete result ("成功", "完成", "已修復", "運作正常", "部署成功") as **unverified until proven otherwise**. Specifically:
-
-- **"File/result saved"** → `stat` or `ls` the claimed path
-- **"API works"** → run a live test or check logs
-- **"Deployed"** → `curl` the deployed file and grep for your fix
-- **"Running"** → `ps` / Get-Process to confirm PID exists
-- **"Bug fixed"** → read the actual source and check the fix is present
-
-**When the user asks about a result claimed in context compaction, ALWAYS verify against real system state before repeating the claim.** Verification checklist per claim type:
 
 - **"File/result saved"** → `stat` or `ls` the claimed path
 - **"DB record inserted/updated/deleted"** → `sqlite3 ... "SELECT * FROM table WHERE ..."` to confirm the row exists. **Compaction frequently fabricates SQL INSERTs that were never executed** — always SELECT to verify.
@@ -552,7 +544,7 @@ ls -la /path/to/possible/files*
 ```bash
 grep -rn "user_stats\|_stats_file\|STATS_FILE" --include="*.py" .
 ```
-Every `_5080` / `_4070` suffix must be removed from file paths AND from data lookup keys (e.g., `"gemini"` not `"5080"`).
+Every `_<instance>` suffix (e.g. `_box_a` / `_box_b`) must be removed from file paths AND from data lookup keys (e.g., `"openai"` not `"box_a"`).
 
 ## ⚠️ Common Pitfall: Misreading Stack Traces
 
@@ -560,7 +552,7 @@ A recurring mistake: **reading the error message but not the stack trace accurat
 
 ### The "Position 22-24" Lesson
 
-**Scenario:** `POST /inject_st_card` returns 500 with:
+**Scenario:** `POST /api/files/attach` returns 500 with:
 
 ```
 'latin-1' codec can't encode characters in position 22-24: ordinal not in range(256)
@@ -575,7 +567,7 @@ A recurring mistake: **reading the error message but not the stack trace accurat
 
 ✅ **Correct approach:**
 1. **Count the positions in the error message.** Position 22-24 = 3 characters.
-2. In `Content-Disposition: attachment; filename="角色卡_bot.png"`, `attachment; filename="` is exactly 22 characters → positions 22-24 are `角色卡`
+2. In `Content-Disposition: attachment; filename="附件一_bot.png"`, `attachment; filename="` is exactly 22 characters → positions 22-24 are `附件一`
 3. **HTTP Headers only support ISO-8859-1 (Latin-1).** Chinese characters in header values will always fail.
 4. Fix: Use RFC 6266 `filename*=utf-8''` encoding.
 
@@ -709,9 +701,11 @@ grep -n "import " FILE.py | head -20
 - [ ] Run syntax check after: `python -c "import py_compile; py_compile.compile('file.py', doraise=True)"`
 - [ ] Better yet, test the actual code path if possible
 
+### ⚠️ Wrong-Module Import: silent `ImportError` inside a broad `try/except`
+
 **Scenario:** A function call works when called from one module but fails with `ImportError` from another. Both code paths look identical.
 
-**Pattern:** `from secretary_bot_core.handlers.db_manager import _save_stats` — `db_manager.py` doesn't HAVE `_save_stats`. It's in `persona_manager.py`.
+**Pattern:** `from myapp.handlers.storage import _save_stats` — `storage.py` doesn't HAVE `_save_stats`. It's in `persona.py`.
 
 **Why it happens:** Developer remembers "there's a save function" and guesses the module. The import is buried in a `try/except` block that catches all exceptions → the error is silently swallowed → feature silently fails forever.
 
@@ -902,10 +896,10 @@ See `references/bypass-shared-save-function-pattern.md` for the specific pattern
 
 ## Real-World Impact
 
-From debugging sessions:
-- Systematic approach: 15-30 minutes to fix
-- Random fixes approach: 2-3 hours of thrashing
-- First-time fix rate: 95% vs 40%
-- New bugs introduced: Near zero vs common
+Observations from debugging sessions (qualitative — not a controlled measurement):
+
+- Systematic investigation tends to converge in minutes; guess-and-check thrashes for hours and often ends with several wrong fixes stacked on each other.
+- The most expensive failures we hit were not "hard bugs" but **wrong hypotheses that looked plausible**: three successive fixes for a PNG-injection theory while the error was actually an HTTP-header encoding limit.
+- Bugs "fixed" without a reproduction tend to come back, sometimes in a different component (see *Chain of Masked Bugs* above).
 
 **No shortcuts. No guessing. Systematic always wins.**

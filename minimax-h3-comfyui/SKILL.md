@@ -1,6 +1,9 @@
 ---
 name: minimax-h3-comfyui
-description: Use when MiniMax H3 影片生成/量化模型/ComfyUI 工作流.
+description: Use when 用 MiniMax H3 做影片生成（量化選型、ComfyUI 工作流、Turbo 加速）。
+version: 1.0.0
+author: Drizzt Studio
+license: MIT
 ---
 
 # MiniMax H3 本地影片生成 (ComfyUI)

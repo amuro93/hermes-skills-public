@@ -1,6 +1,9 @@
 ---
 name: mac-mlx-ollama-deployment
 description: Use when 在 Apple Silicon Mac 部署 LLM。Ollama MLX 引擎、自訂 safetensors 模型匯入。
+version: 1.0.0
+author: Drizzt Studio
+license: MIT
 ---
 
 # Mac (Apple Silicon) LLM 伺服器部署 — Ollama + MLX

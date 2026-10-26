@@ -22,8 +22,8 @@ metadata:
 - 雲端 session 開不起來、額度怎麼算、要不要重試
 - 要把一套 POSIX-only 的雲端 CLI 搬到 Windows 主機上跑
 
-配套：花錢與送件紀律看 `systematic-debugging`（§1b-2 送前先問／§1b-3 討論沒完不送／§5 餘額實查）；
-各模型自己的 prompt 結構與失敗模式，留在該產線的 skill。
+配套：花錢與送件紀律＝本 skill §1（額度與 session 生命週期）＋ §2（GPU 規格與額度層級）；
+通用除錯紀律看 `systematic-debugging`。各模型自己的 prompt 結構與失敗模式，留在該產線的 skill。
 
 ## 本文範圍（缺什麼、你要自己補什麼）
 

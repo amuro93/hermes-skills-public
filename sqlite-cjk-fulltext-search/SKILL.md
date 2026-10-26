@@ -3,6 +3,7 @@ name: sqlite-cjk-fulltext-search
 description: Use when 為中文內容做 SQLite 全文檢索（FTS5 trigram + 短詞 LIKE 分流）。
 version: 1.0.0
 author: Drizzt Studio
+license: MIT
 metadata:
   hermes:
     tags: [sqlite, fts5, cjk, fulltext-search, memory-system]
