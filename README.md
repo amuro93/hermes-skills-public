@@ -10,6 +10,8 @@ One entry is derived from upstream work and is labelled as such: **`systematic-d
 
 ## What's Inside (15 Skills)
 
+> **📖 Three of these are experience notes, not runnable tools.** `autoip-video-api`, `cloud-gpu-lane-ops` and `windows-python-tool-compat` document **how to operate someone else's client/runner** — the client itself is *not* bundled and was not re-verified end-to-end here. Treat them as write-ups of what we learned, **not** as download-and-use tooling. Each one opens with a "scope / what you must supply yourself" section; read that before assuming anything runs.
+
 ### 🛡️ Agentic Engineering, Security & Data
 - **`systematic-debugging`** — Four-phase root-cause discipline for AI coding agents, tracing masked errors across silent `except: return []` chains, and project-wide post-fix sweeps. **Adapted from [obra/superpowers](https://github.com/obra/superpowers) (MIT — see `author` / `license` in its frontmatter); the method is upstream, the source-specific notes in `references/` were added from our own projects.**
 - **`git-secret-leak-scan`** — Two-pass GitHub account secret & SQLite DB auditing designed for AI agents (zero-plaintext output by design to prevent LLM context leakage, live key verification, API self-revocation, and WSL2 `git-filter-repo` history purging).
@@ -18,17 +20,17 @@ One entry is derived from upstream work and is labelled as such: **`systematic-d
 
 ### 🖥️ Local LLM & Cloud GPU Infrastructure
 - **`mac-mlx-ollama-deployment`** — Running LLMs on Apple Silicon via Ollama's native MLX engine (2× faster decode than GGUF/llama.cpp), importing custom safetensors weights with `--experimental`, and fixing Cloudflare Tunnel 403 Host header rejections.
-- **`cloud-gpu-lane-ops`** — Operating headless cloud GPU lanes (Colab CLI): quota lifecycle, automatic session teardown, and porting POSIX-only Python CLIs to Windows (`termios` stubs, `PYTHONPATH` isolation).
+- **`cloud-gpu-lane-ops`** — 📖 *(experience note — the runner is **not** bundled)* Operating headless cloud GPU lanes (Colab CLI): quota lifecycle, automatic session teardown, and porting POSIX-only Python CLIs to Windows (`termios` stubs, `PYTHONPATH` isolation).
 
 ### 🪟 Windows Agent Operations
-- **`windows-python-tool-compat`** — Why external Python tools break on Windows and how to fix each failure mode: POSIX-only imports (`termios`/`tty`/`fcntl`) stubbed into the tool's own venv `site-packages`, MSYS-vs-native path confusion, and `PYTHONPATH`/process-tree handling.
+- **`windows-python-tool-compat`** — 📖 *(experience note — no bundled implementation)* Why external Python tools break on Windows and how to fix each failure mode: POSIX-only imports (`termios`/`tty`/`fcntl`) stubbed into the tool's own venv `site-packages`, MSYS-vs-native path confusion, and `PYTHONPATH`/process-tree handling.
 - **`windows-app-install-verification`** — Verifying a third-party app/driver install on Windows before calling it done: UAC and reboot expectations surfaced up front, vendor launcher residue checks, and checking resource ownership before grabbing a shared GPU/service.
 
 ### 🎬 ComfyUI & Multimodal Video Generation
 - **`comfyui-server-ops`** — Running a *shared* ComfyUI box over HTTP: queue discipline so you don't monopolise the GPU, the `/history/{pid}` returning `{}` trap, why a timeout is not a failure (read `/queue` first), why `/prompt` is **not** safe to blind-retry, partial-result persistence so a killed wrapper doesn't lose the batch, cron scheduling and timezone pitfalls, downloading models when you have no shell on the box, and node-set diffing after a ComfyUI upgrade. The API-scripting basics (`/prompt` contract, `/object_info` inspection, `SaveVideo` output keys, batch A/B seeds) live in its `references/api-scripting.md`.
 - **`ltx25-video-generation`** — Lightricks LTX-2.5 22B audio-video generation on 16GB VRAM (NVFP4 transformer + INT8 Gemma-4, duration-head auto-length, and NAG + DualCFG workflows).
 - **`minimax-h3-comfyui`** — MiniMax H3 24fps audio-video generation on 16GB/12GB GPUs: pruned GGUF vs safetensors quantisation, FastH3 8-step V2 distillation, `BlockSparseAttention` dotted-key API syntax, and verified HuggingFace download scripts.
-- **`autoip-video-api`** — AutoIP MSR video API integration: multi-subject reference face locking, single-person shot splitting, and ffmpeg `atempo` voiceover pacing fixes.
+- **`autoip-video-api`** — 📖 *(experience note — client is **not** bundled; contract only)* AutoIP MSR video API integration: multi-subject reference face locking, single-person shot splitting, and ffmpeg `atempo` voiceover pacing fixes.
 - **`ai-video-qa`** — How to actually verify AI-generated video: frame-sampling density that matches the claim you want to make, the four ways sampling fakes a false negative, `SSIM`/seam-ratio acceptance gates that must be calibrated per source lane, first/last-frame traps (objects spawning out of nowhere, walls fading, camera geometry overriding prompt), closed-loop via ping-pong, a vision-model capability boundary that stops you trusting thumbnails, and the symptom→root-cause table. Ships four reusable ffmpeg measurement scripts.
 
 ### 📚 Long-Form Chinese Fiction Engineering
@@ -72,6 +74,8 @@ MIT — use them, fork them, ship them.
 
 ## 收錄內容（共 15 支實戰 Skill）
 
+> **📖 其中 3 支是「經驗文件」，不是可直接執行的工具。** `autoip-video-api`、`cloud-gpu-lane-ops`、`windows-python-tool-compat` 寫的是**怎麼操作別人的 client／runner**——client 本體**沒有**隨附，也沒有在本 skill 內做過完整端到端驗證。請把它們當「我們撞過什麼、怎麼繞」的筆記，**不要**當成下載即用、已驗收的工具。三支的開頭都有一節「本文範圍（缺什麼、你要自己補什麼）」，動用前先讀那節。
+
 ### 🛡️ AI Agent 工程、資安與中文檢索（4 支）
 - **`systematic-debugging`** — 專治 AI Coding Agent「亂猜亂改」的四階段根因除錯紀律：追蹤被多層 `except: return []` 靜默吞掉的錯誤鏈，以及修復後的跨專案同型態問題清查。**改寫自 [obra/superpowers](https://github.com/obra/superpowers)（MIT，見該檔 frontmatter 的 `author` / `license`）—— 方法論是上游的，`references/` 裡的專案案例筆記才是我們自己補的。**
 - **`git-secret-leak-scan`** — 專為 AI Agent 設計的 GitHub 全帳號機密與 SQLite DB 兩階段稽核（內附 `scripts/scan_repos_secrets.py` 預設零明文脫敏掃描器，防止真 Key 落入 LLM Context 外洩）、金鑰驗活與無後台權限時的 API 自我撤銷、以及 Windows 透過 WSL2 `git-filter-repo` 清洗歷史的完整 SOP。
@@ -80,17 +84,17 @@ MIT — use them, fork them, ship them.
 
 ### 🖥️ 本地 LLM 與雲端 GPU 基礎設施（2 支）
 - **`mac-mlx-ollama-deployment`** — 在 Apple Silicon 上使用 Ollama 原生 MLX 引擎部署 LLM（解碼速度為 GGUF/llama.cpp 的 2 倍）、`--experimental` 匯入自訂 safetensors 權重，以及修復 Cloudflare Tunnel 403 Host 標頭阻擋。
-- **`cloud-gpu-lane-ops`** — 將無頭雲端 GPU（Colab CLI）作為自動化運算產線：配額與工作階段生命週期管理、工作負載分流，以及將 POSIX 專屬 Python CLI 移植至 Windows 的三件套解法（`termios` stub、`PYTHONPATH` 隔離、程序樹終止）。
+- **`cloud-gpu-lane-ops`** — 📖 *（經驗文件：runner **未**隨附）* 將無頭雲端 GPU（Colab CLI）作為自動化運算產線：配額與工作階段生命週期管理、工作負載分流，以及將 POSIX 專屬 Python CLI 移植至 Windows 的三件套解法（`termios` stub、`PYTHONPATH` 隔離、程序樹終止）。
 
 ### 🪟 Windows Agent 維運（2 支）
-- **`windows-python-tool-compat`** — 外部 Python 工具在 Windows 上跑不起來的逐項解法：POSIX 專屬 import（`termios`／`tty`／`fcntl`）要 stub 進該工具自己的 venv `site-packages`、MSYS 與原生路徑不互轉的混淆，以及 `PYTHONPATH` 與程序樹收尾。
+- **`windows-python-tool-compat`** — 📖 *（經驗文件：無隨附實作）* 外部 Python 工具在 Windows 上跑不起來的逐項解法：POSIX 專屬 import（`termios`／`tty`／`fcntl`）要 stub 進該工具自己的 venv `site-packages`、MSYS 與原生路徑不互轉的混淆，以及 `PYTHONPATH` 與程序樹收尾。
 - **`windows-app-install-verification`** — 在 Windows 裝第三方 app／驅動之後怎麼驗收才算完成：開跑前先講清楚會跳 UAC 與可能要重開機、廠商 launcher 的解壓與登錄檔殘留檢查、以及動共用 GPU／服務前先確認所有權。
 
 ### 🎬 ComfyUI 與多模態影音生成工程（5 支）
 - **`comfyui-server-ops`** — 用 HTTP API 操作一台**共用** ComfyUI 產線機的維運知識：佇列紀律（不要連續霸佔 GPU）、`/history/{pid}` 回 `{}` 的假死陷阱、為什麼 timeout 不等於任務失敗（先讀 `/queue`）、為什麼 `/prompt` **不能**無腦重試（非冪等，會多排一張）、成果 partial 落盤讓被砍掉的 wrapper 不至於整批歸零、cron 排程與時區坑、沒有 shell 時怎麼把模型弄進機器，以及 ComfyUI 升級後的節點集合 diff 驗證。API 腳本撰寫基礎（`/prompt` 契約、`/object_info` 反查、`SaveVideo` 輸出鍵、批次 A/B seed）收在它的 `references/api-scripting.md`。
 - **`ltx25-video-generation`** — Lightricks LTX-2.5 22B 影音同步生成於 16GB VRAM 的完整配置（NVFP4 Transformer + INT8 Gemma-4、duration-head 自動片長與 NAG + DualCFG 工作流）。
 - **`minimax-h3-comfyui`** — MiniMax H3 24fps 影音生成完整指南（16GB/12GB 顯卡配置）：Pruned GGUF 與 safetensors 量化選型、FastH3 8-Step V2 蒸餾加速、`BlockSparseAttention` 點號展開參數防 720p FP16 溢位綠點、真實底片膚質去油光 Prompt，以及驗證下載腳本。
-- **`autoip-video-api`** — AutoIP MSR 鎖臉影片生成 API 整合：多主體參考鎖臉、單人分鏡防臉崩原則，以及使用 ffmpeg `atempo` 修正配音語速過快問題。
+- **`autoip-video-api`** — 📖 *（經驗文件：client **未**隨附，只有契約）* AutoIP MSR 鎖臉影片生成 API 整合：多主體參考鎖臉、單人分鏡防臉崩原則，以及使用 ffmpeg `atempo` 修正配音語速過快問題。
 - **`ai-video-qa`** — 驗收 AI 生成影片的完整方法論：抽幀密度要跟「你想下的結論」匹配、稀疏取樣如何偽造出假陰性、SSIM／接縫比值門檻必須按素材來源分 lane 校準、首尾幀過渡的物件憑空生成與牆面漸變、運鏡詞被幾何條件壓過、ping-pong 重組成閉環、vision 不能信的邊界（縮圖拼圖會自信地講錯），以及症狀→根因快查表。附 4 支可重用 ffmpeg 量測腳本。
 
 ### 📚 長篇中文小說工程（2 支）

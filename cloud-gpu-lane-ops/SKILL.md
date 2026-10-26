@@ -13,6 +13,10 @@ metadata:
 
 # 雲端 GPU 產線操作（Colab CLI 類）
 
+> 📖 **範圍宣告：本文是「經驗文件」，不是下載即用的工具。**
+> `runner.py` 屬第三方 repo（見下節），**沒有隨附**；本 skill 只記錄在 Windows 上要補哪些 patch、
+> 以及額度／session／驗收的操作知識，沒有在公開版做過完整端到端重跑。
+
 ## When to use / 觸發時機
 - 要用雲端 GPU 額度跑生成任務（例：Colab CLI 跑 MiniMax-H3 Ref2VA，本機只上傳參考圖＋prompt，跑完拉成品回來）
 - 雲端 session 開不起來、額度怎麼算、要不要重試

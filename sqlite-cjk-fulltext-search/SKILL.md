@@ -99,9 +99,39 @@ with sqlite3.connect(DB_PATH) as conn:
       conn.commit()
   ```
 
-  真的需要「DB 自己維護」時，用 **`content=` 外部內容表**（SQLite 內建同步，不會漏），
-  並用 `INSERT INTO messages_fts(messages_fts) VALUES('rebuild')` 重建。
-- 🔴 **不要**用 external-content ＋ 手寫 trigger：trigger 少寫一個（尤其 DELETE／UPDATE）就造成索引與主表**靜默不同步** —— 症狀是「明明有這筆、就是搜不到」，而且只在改過／刪過的資料上發生，極難重現。
+  真的需要省空間時才用 **`content=` 外部內容表**（索引只存 FTS 結構、不存第二份正文），
+  但 🔴 **它不會自動同步**：SQLite 只提供查詢層的「讀主表」能力，**不提供任何自動 trigger**。
+
+  ```sql
+  -- 外部內容表建立（注意 content= / content_rowid= 指向主表）
+  CREATE VIRTUAL TABLE messages_fts USING fts5(
+    content, content='messages', content_rowid='id', tokenize='trigram');
+
+  -- 「不會自動同步」＝下面三個 trigger 一個都不能少
+  CREATE TRIGGER messages_ai AFTER INSERT ON messages BEGIN
+    INSERT INTO messages_fts(rowid, content) VALUES (new.id, new.content);
+  END;
+  CREATE TRIGGER messages_ad AFTER DELETE ON messages BEGIN
+    INSERT INTO messages_fts(messages_fts, rowid, content)
+      VALUES ('delete', old.id, old.content);       -- 外部內容表要用 'delete' 指令，不能 DELETE FROM
+  END;
+  CREATE TRIGGER messages_au AFTER UPDATE ON messages BEGIN
+    INSERT INTO messages_fts(messages_fts, rowid, content)
+      VALUES ('delete', old.id, old.content);
+    INSERT INTO messages_fts(rowid, content) VALUES (new.id, new.content);
+  END;
+  ```
+
+  - `INSERT INTO messages_fts(messages_fts) VALUES('rebuild')` **只是維修工具**（整表重讀主表重建），
+    **不是**持續同步機制 —— 它不會因為你新增資料就自動跑。只有在「補建索引」或
+    「trigger 漏寫過、要一次補齊」時才用它，而且重建完仍必須有 trigger 才不會繼續漏。
+  - 🔴 **實證症狀（2026-10 更正）**：舊版本文寫「external-content 是 SQLite 內建同步，不會漏」——
+    **錯的**。照著建表卻沒寫 trigger 的結果是：新寫入的訊息**永遠搜不到**、改過的舊詞**還搜得到**，
+    而且完全不報錯（`MATCH` 就是安靜地少一筆）。要驗這個：insert 一筆新內容 → 立刻搜它 → 必須命中；
+    update 舊內容 → 搜舊詞 → 必須 0 筆。
+- ⚠️ 若你就是要用 external-content，**三個 trigger 缺一個就是靜默不同步**（尤其 DELETE／UPDATE）——
+  這種 bug 只在「改過／刪過的資料」上發作，極難重現，所以本 skill 的預設建議仍是
+  「獨立 fts5 表 ＋ 同一 transaction 手動同步」（上面三段程式碼），把同步寫在應用層而不是資料庫裡。
 - 同一個 transaction 保證「有訊息就有索引」，不需要補償邏輯。
 - 驗收要一次驗三種：insert 後搜得到、update 後**搜不到舊詞**、delete 後搜不到該筆。
 

@@ -18,6 +18,13 @@
 失敗語意（fail-closed）：
   - 某個 repo 掃不動 → 記在 JSON 的 `error` 欄、stderr 明講，process 以 **exit 2** 結束。
   - tracked ≠ scanned+skipped → 統計不可信，以 **exit 3** 結束。
+  - 有 tracked 檔**在磁碟上不存在或讀不到**（missing／unreadable）→ 掃描覆蓋率不完整，
+    以 **exit 4** 結束。
+    🔴 這條是 2026-10 補的：數量對帳成立（tracked = scanned + skipped）**不代表檔案真的被掃過**。
+       「已追蹤但缺失」以前只被計入 skipped 就 exit 0 —— 那正是機密最可能藏身的地方
+       （檔案被刪／被搬／權限鎖住），上游看到 0 會當成「乾淨」。
+       例外（不算失敗）：故意排除的副檔名、超大檔、二進位檔 —— 這三類是設計上的排除，
+       仍會列在 JSON 讓你能自己決定要不要補掃。
   ⇒「掃不到」永遠不會被上游讀成「乾淨」。
 
 改完這支腳本，用下列探針自驗（不要只在真目標上跑一次就宣布可用）：
@@ -25,6 +32,9 @@
      （例如 `ghp_` + 36 個 `Z`）→ 兩個檔都要命中，且 reconciles 必須成立。
   2) 對一個不是 repo 的目錄呼叫 scan_repo → `error` 必須有值、`files_tracked` 為 0。
   3) CLI 掃一個含損壞 `.git` 的父目錄 → exit code 必須是 2。
+  4) scratch repo 先 commit 一個 `gone.txt` 再 `rm` 掉（保持 tracked）→ exit code 必須是 4，
+     且該檔出現在 JSON 的 `skipped_missing`。
+  5) 承上，把檔案放回去 → 必須回到 exit 0（證明 4 不是無條件失敗）。
 """
 import argparse
 import json
@@ -158,6 +168,7 @@ def main():
     results = []
     failed = 0
     unreconciled = 0
+    incomplete = 0
     for r in repos:
         res = scan_repo(r)
         results.append(res)
@@ -169,14 +180,21 @@ def main():
         reconciles = (res["files_tracked"] == res["files_scanned"] + skipped)
         if res["error"] is None and not reconciles:
             unreconciled += 1
+        # 「已追蹤但掃不到」＝覆蓋率有洞：數字對得上不代表檔案真的被看過。
+        gap = len(res["skipped_missing"]) + len(res["skipped_unreadable"])
+        if res["error"] is None and gap:
+            incomplete += 1
         print(f"[{r.name}] tracked={res['files_tracked']} scanned={res['files_scanned']} "
               f"skipped={skipped} env={len(res['env_tracked'])} "
               f"db={len(res['db_tracked'])} sens={len(res['sensitive_tracked'])} hits={n} "
               f"remote_token={'YES' if res['remote_has_token'] else '-'}"
               f" reconciles={'ok' if reconciles else 'NO'}"
               + (f" ERROR={res['error']!r}" if res["error"] else ""))
+        if res["skipped_missing"]:
+            shown = ", ".join(res["skipped_missing"][:5])
+            print(f"  🔴 {len(res['skipped_missing'])} 個 tracked 檔在磁碟上不存在（未掃）：{shown}")
         if res["skipped_unreadable"]:
-            print(f"  ⚠️ {len(res['skipped_unreadable'])} 個 tracked 檔讀不到（未掃）→ 見 JSON skipped_unreadable")
+            print(f"  🔴 {len(res['skipped_unreadable'])} 個 tracked 檔讀不到（未掃）→ 見 JSON skipped_unreadable")
 
     out = Path(a.out)
     out.write_text(json.dumps(results, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -189,6 +207,11 @@ def main():
     if unreconciled:
         print(f"🔴 {unreconciled} 個 repo 的 tracked ≠ scanned+skipped，統計不可信", file=sys.stderr)
         return 3
+    if incomplete:
+        print(f"🔴 {incomplete} 個 repo 有「已追蹤但缺失／讀不到」的檔案 → 掃描不完整，"
+              f"不可回報為乾淨（見 JSON 的 skipped_missing／skipped_unreadable）",
+              file=sys.stderr)
+        return 4
     print("下一步：讀 json 逐筆人工複核（尤其 hardcoded-password），再決定哪些要驗活")
     return 0
 

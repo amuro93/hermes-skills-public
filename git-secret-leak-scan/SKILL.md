@@ -60,6 +60,8 @@ python scripts/scan_repos_secrets.py /path/to/cloned_repos -o secret_scan_result
 - `tracked` 必須等於 `scanned ＋ skipped`；每個沒被掃的檔都有理由（`skipped_ext`／`skipped_large`／`skipped_missing`／`skipped_binary`／`skipped_unreadable`），不會靜默漏掉。
 - 某個 repo 掃不動（不是 git repo、`.git` 損壞、git 回非 0）→ JSON 記 `error` 欄、CLI **exit 2**。
 - `reconciles` 不成立 → CLI **exit 3**（統計不可信）。
+- 有 tracked 檔**在磁碟上不存在或讀不到**（`skipped_missing`／`skipped_unreadable` 非空）→ CLI **exit 4**。
+  🔴 這條補的是「數字對得上 ≠ 檔案真的掃過」：tracked = scanned + skipped 成立時，一個被刪掉／搬走／鎖住的檔案也長得跟「正常排除」一樣，以前因此 exit 0。**覆蓋率有洞就不准說乾淨。**
 
 ⇒ 判讀鐵則：**`hits=0` 只有在 exit 0 且每筆 `error` 為 null 時，才可以講「本次範圍未發現」**。「掃不到」不能讀成「乾淨」。
 
