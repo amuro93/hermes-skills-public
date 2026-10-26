@@ -50,19 +50,35 @@ SKIP_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".mp4", ".mov", ".
 MAX_BYTES = 4 * 1024 * 1024
 
 
+class GitError(RuntimeError):
+    """git 指令失敗。以前這裡 `except Exception: return ""` 會讓「掃不到」看起來像「乾淨」。"""
+
+
 def git(repo, *args):
-    try:
-        r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, timeout=120)
-        return r.stdout.decode("utf-8", "replace")
-    except Exception:
-        return ""
+    """跑 git，回傳 raw bytes；非 0 結束碼一律拋錯（不可靜默回空字串）。"""
+    r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, timeout=120)
+    if r.returncode != 0:
+        first = r.stderr.decode("utf-8", "replace").strip().splitlines()
+        raise GitError(f"git {' '.join(args[:2])} rc={r.returncode}: {first[0] if first else ''}")
+    return r.stdout
+
+
+def git_text(repo, *args):
+    return git(repo, *args).decode("utf-8", "replace")
 
 
 def scan_repo(repo: Path):
     out = {"repo": repo.name, "files_tracked": 0, "env_tracked": [], "db_tracked": [],
            "sensitive_tracked": [], "hits": {}, "remote_has_token": None,
-           "skipped_large": 0}
-    files = [l for l in git(repo, "ls-files").splitlines() if l.strip()]
+           "skipped_large": 0, "error": None}
+    try:
+        # -z：不加的話 git 會把非 ASCII／含空白的檔名加上引號跳脫，
+        # 路徑就對不上磁碟上的檔 → 整檔被靜默跳過（實測中文檔名會漏掃）。
+        raw = git(repo, "ls-files", "-z")
+    except GitError as e:
+        out["error"] = str(e)
+        return out
+    files = [f for f in raw.decode("utf-8", "replace").split("\0") if f.strip()]
     out["files_tracked"] = len(files)
 
     env_files = [f for f in files if re.search(r"(^|/)\.env(\.|$)", f)]
@@ -73,7 +89,10 @@ def scan_repo(repo: Path):
                                if SENSITIVE_NAME.search(f) and f not in env_files][:20]
 
     # remote 是否內嵌 token —— 只回報有無，永不印 URL
-    cfg = git(repo, "config", "--get", "remote.origin.url")
+    try:
+        cfg = git_text(repo, "config", "--get", "remote.origin.url")
+    except GitError:
+        cfg = ""   # 沒有 origin 不算錯誤
     out["remote_has_token"] = bool(re.search(r"(ghp_|github_pat_|://[^/]*:[^@]+@)", cfg))
 
     for f in files:
@@ -113,18 +132,26 @@ def main():
         return 1
 
     results = []
+    failed = 0
     for r in repos:
         res = scan_repo(r)
         results.append(res)
         n = sum(len(v) for v in res["hits"].values())
+        if res["error"]:
+            failed += 1
         print(f"[{r.name}] tracked={res['files_tracked']} env={len(res['env_tracked'])} "
               f"db={len(res['db_tracked'])} sens={len(res['sensitive_tracked'])} hits={n} "
               f"remote_token={'YES' if res['remote_has_token'] else '-'}"
-              + (f" skipped_large={res['skipped_large']}" if res["skipped_large"] else ""))
+              + (f" skipped_large={res['skipped_large']}" if res["skipped_large"] else "")
+              + (f" ERROR={res['error']!r}" if res["error"] else ""))
 
     out = Path(a.out)
     out.write_text(json.dumps(results, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"\n=== {len(results)} repos → {out} ===")
+    if failed:
+        # 有 repo 掃不動就不能回 0：那會被上游腳本／CI 當成「全部乾淨」。
+        print(f"🔴 {failed} 個 repo 掃描失敗（見 JSON 的 error 欄），結果不可視為乾淨", file=sys.stderr)
+        return 2
     print("下一步：讀 json 逐筆人工複核（尤其 hardcoded-password），再決定哪些要驗活")
     return 0
 
