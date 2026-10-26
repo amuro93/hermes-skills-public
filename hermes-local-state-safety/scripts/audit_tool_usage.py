@@ -35,6 +35,7 @@ def snapshot_state_db(profile: str, keep: bool) -> str:
         sys.exit(f"找不到 state.db：{live}\n用 --profile 指到 profile 目錄（或設 HERMES_HOME）")
     tmp = tempfile.mkdtemp(prefix="audit_db_")
     dest = os.path.join(tmp, "state.db")
+    completed = False
     try:
         # 唯讀連線 + online backup：快照在一致性上等同「複製時的那一刻」，
         # 不需要停 gateway，也不會觸發 WAL recovery（那是裸可寫連線才會做的事）。
@@ -47,13 +48,16 @@ def snapshot_state_db(profile: str, keep: bool) -> str:
                 dst.close()
         finally:
             src.close()
-    except sqlite3.Error as e:
-        # 備援：backup 不可用時才逐檔複製，並明講一致性較弱。
-        print(f"⚠️ backup API 失敗（{e}）→ 退回檔案複製，快照可能非一致", file=sys.stderr)
-        for suf in ("", "-wal", "-shm"):
-            s = live + suf
-            if os.path.exists(s):
-                shutil.copy2(s, os.path.join(tmp, "state.db" + suf))
+        completed = True
+    finally:
+        # 失敗或中斷時絕不回傳半成品；keep 只適用於成功的快照。
+        # 連線已由上面的 finally 關閉，Windows 才能移除副本。
+        if not completed:
+            try:
+                shutil.rmtree(tmp)
+            except OSError as e:
+                # 清理失敗也不能掩蓋原始錯誤或繼續查詢。
+                print(f"⚠️ 無法清除未完成快照 {tmp}：{e}", file=sys.stderr)
     return tmp
 
 
@@ -98,7 +102,11 @@ def main():
     if not (1 <= a.days <= 36500):
         sys.exit(f"--days 必須介於 1 和 36500 之間（收到 {a.days}；更大的值會讓 timedelta 溢位）")
 
-    tmp = snapshot_state_db(a.profile, a.keep_copy)
+    try:
+        tmp = snapshot_state_db(a.profile, a.keep_copy)
+    except (sqlite3.Error, OSError) as e:
+        print(f"❌ 建立一致快照失敗，已停止審計：{e}", file=sys.stderr)
+        sys.exit(2)
     con = None
     try:
         db = os.path.join(tmp, "state.db")

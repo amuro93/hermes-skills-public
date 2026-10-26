@@ -26,7 +26,7 @@ tags: [hermes, state-db, sqlite, config, safety, devops]
 | **先做一致快照再查** | Python：`src=sqlite3.connect(f"file:{live}?mode=ro", uri=True); src.backup(dst)`（SQLite **Online Backup API**，快照一致、不需停服務）；或 `sqlite3 -readonly live "VACUUM INTO '<tmp>/snap.db'"` |
 | **唯讀查** | `sqlite3 -readonly state.db "..."`；Python: `sqlite3.connect("file:<path>?mode=ro", uri=True)` |
 
-⚠️ **「`cp state.db state.db-wal state.db-shm` 三檔一起複製」不是原子操作**：複製期間 gateway 若正在寫，三個檔會來自不同時間點，副本可能前後不一致（SQLite 官方文件也說這種複製只在有 lock 保護時才安全）。它可以當「沒有其他辦法時」的備援，但**首選是 backup API／`VACUUM INTO`**。
+⚠️ **「`cp state.db state.db-wal state.db-shm` 三檔一起複製」不是原子操作**：複製期間 gateway 若正在寫，三個檔會來自不同時間點，副本可能前後不一致（SQLite 官方文件也說這種複製只在有 lock 保護時才安全）。**不可把未停寫、未取得適當鎖保護的逐檔複製當成備援**。本腳本建立快照失敗時立即停止審計（SQLite／檔案系統錯誤回傳 exit 2），關閉連線並清除未完成副本；即使指定 `--keep-copy` 也不保留半成品。若清除因權限或鎖檔失敗，會明確報出路徑，且仍不繼續查詢。
 
 ### ❌ 不要做
 - `sqlite3.connect(live_path)`（沒帶 `mode=ro` 的那種）
