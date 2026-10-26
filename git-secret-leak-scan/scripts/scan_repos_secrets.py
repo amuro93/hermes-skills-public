@@ -7,9 +7,24 @@
 用法：
     python scan_repos_secrets.py <repo 父目錄> [-o result.json]
 
+前提：先用 GitHub API tree 掃過「檔名層」，只 clone 真的有疑慮的 repo
+     （見 SKILL.md〈掃一整個 GitHub 帳號的 repo 時：先用 API 列檔案，不要先 clone〉）。
+
 輸出每行：
-    [repo] tracked=560 env=0 db=1 sens=2 hits=8 remote_token=-
-    之後可讀 result.json 拿每個命中的 file/line/len 做人工複核。
+    [repo] tracked=58 scanned=58 skipped=0 env=0 db=0 sens=0 hits=1 remote_token=- reconciles=ok
+    tracked 必須等於 scanned ＋ 各種 skipped（ext／large／missing／binary／unreadable），
+    每個沒被掃的檔都有理由，不會靜默漏掉。明細可讀 result.json 拿 file/line/len 人工複核。
+
+失敗語意（fail-closed）：
+  - 某個 repo 掃不動 → 記在 JSON 的 `error` 欄、stderr 明講，process 以 **exit 2** 結束。
+  - tracked ≠ scanned+skipped → 統計不可信，以 **exit 3** 結束。
+  ⇒「掃不到」永遠不會被上游讀成「乾淨」。
+
+改完這支腳本，用下列探針自驗（不要只在真目標上跑一次就宣布可用）：
+  1) scratch 建臨時 repo，放 `plain.txt` 與 `中文.txt`，兩檔各寫同一個**自己拼的假憑證**
+     （例如 `ghp_` + 36 個 `Z`）→ 兩個檔都要命中，且 reconciles 必須成立。
+  2) 對一個不是 repo 的目錄呼叫 scan_repo → `error` 必須有值、`files_tracked` 為 0。
+  3) CLI 掃一個含損壞 `.git` 的父目錄 → exit code 必須是 2。
 """
 import argparse
 import json
@@ -68,9 +83,11 @@ def git_text(repo, *args):
 
 
 def scan_repo(repo: Path):
-    out = {"repo": repo.name, "files_tracked": 0, "env_tracked": [], "db_tracked": [],
-           "sensitive_tracked": [], "hits": {}, "remote_has_token": None,
-           "skipped_large": 0, "error": None}
+    out = {"repo": repo.name, "files_tracked": 0, "files_scanned": 0,
+           "env_tracked": [], "db_tracked": [], "sensitive_tracked": [], "hits": {},
+           "remote_has_token": None, "skipped_ext": 0, "skipped_large": 0,
+           "skipped_missing": [], "skipped_binary": [], "skipped_unreadable": [],
+           "error": None}
     try:
         # -z：不加的話 git 會把非 ASCII／含空白的檔名加上引號跳脫，
         # 路徑就對不上磁碟上的檔 → 整檔被靜默跳過（實測中文檔名會漏掃）。
@@ -97,20 +114,27 @@ def scan_repo(repo: Path):
 
     for f in files:
         p = repo / f
+        # 每一個「沒掃」的檔都要有理由，讓 tracked = scanned + skipped 可以對帳；
+        # 靜默 continue 會讓「掃過了、什麼都沒找到」變成假象。
         if p.suffix.lower() in SKIP_EXT:
+            out["skipped_ext"] += 1
             continue
         try:
             if not p.is_file():
+                out["skipped_missing"].append(f)
                 continue
             size = p.stat().st_size
             if size > MAX_BYTES:
-                out["skipped_large"] += 1   # 跳過要計數，別靜默
+                out["skipped_large"] += 1
                 continue
             data = p.read_bytes()
-            if b"\x00" in data[:4096]:
-                continue
-        except Exception:
+        except Exception as e:            # 權限／鎖檔／中文路徑轉換失敗都走這裡
+            out["skipped_unreadable"].append({"file": f, "error": type(e).__name__})
             continue
+        if b"\x00" in data[:4096]:
+            out["skipped_binary"].append(f)
+            continue
+        out["files_scanned"] += 1
         for cat, rx in PATTERNS:
             for m in rx.finditer(data):
                 line = data.count(b"\n", 0, m.start()) + 1
@@ -133,25 +157,38 @@ def main():
 
     results = []
     failed = 0
+    unreconciled = 0
     for r in repos:
         res = scan_repo(r)
         results.append(res)
         n = sum(len(v) for v in res["hits"].values())
         if res["error"]:
             failed += 1
-        print(f"[{r.name}] tracked={res['files_tracked']} env={len(res['env_tracked'])} "
+        skipped = (res["skipped_ext"] + res["skipped_large"] + len(res["skipped_missing"])
+                   + len(res["skipped_binary"]) + len(res["skipped_unreadable"]))
+        reconciles = (res["files_tracked"] == res["files_scanned"] + skipped)
+        if res["error"] is None and not reconciles:
+            unreconciled += 1
+        print(f"[{r.name}] tracked={res['files_tracked']} scanned={res['files_scanned']} "
+              f"skipped={skipped} env={len(res['env_tracked'])} "
               f"db={len(res['db_tracked'])} sens={len(res['sensitive_tracked'])} hits={n} "
               f"remote_token={'YES' if res['remote_has_token'] else '-'}"
-              + (f" skipped_large={res['skipped_large']}" if res["skipped_large"] else "")
+              f" reconciles={'ok' if reconciles else 'NO'}"
               + (f" ERROR={res['error']!r}" if res["error"] else ""))
+        if res["skipped_unreadable"]:
+            print(f"  ⚠️ {len(res['skipped_unreadable'])} 個 tracked 檔讀不到（未掃）→ 見 JSON skipped_unreadable")
 
     out = Path(a.out)
     out.write_text(json.dumps(results, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"\n=== {len(results)} repos → {out} ===")
     if failed:
         # 有 repo 掃不動就不能回 0：那會被上游腳本／CI 當成「全部乾淨」。
-        print(f"🔴 {failed} 個 repo 掃描失敗（見 JSON 的 error 欄），結果不可視為乾淨", file=sys.stderr)
+        print(f"🔴 {failed} 個 repo 掃描失敗（見 JSON 的 error 欄），結果不可視為乾淨",
+              file=sys.stderr)
         return 2
+    if unreconciled:
+        print(f"🔴 {unreconciled} 個 repo 的 tracked ≠ scanned+skipped，統計不可信", file=sys.stderr)
+        return 3
     print("下一步：讀 json 逐筆人工複核（尤其 hardcoded-password），再決定哪些要驗活")
     return 0
 

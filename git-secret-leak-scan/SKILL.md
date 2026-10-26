@@ -55,6 +55,16 @@ gh api "repos/<owner>/<repo>/git/trees/$t?recursive=1" \
 python scripts/scan_repos_secrets.py /path/to/cloned_repos -o secret_scan_result.json
 ```
 
+每個 repo 輸出一行 `tracked/scanned/skipped/env/db/sens/hits/remote_token/reconciles`。設計上 **fail-closed**：
+
+- `tracked` 必須等於 `scanned ＋ skipped`；每個沒被掃的檔都有理由（`skipped_ext`／`skipped_large`／`skipped_missing`／`skipped_binary`／`skipped_unreadable`），不會靜默漏掉。
+- 某個 repo 掃不動（不是 git repo、`.git` 損壞、git 回非 0）→ JSON 記 `error` 欄、CLI **exit 2**。
+- `reconciles` 不成立 → CLI **exit 3**（統計不可信）。
+
+⇒ 判讀鐵則：**`hits=0` 只有在 exit 0 且每筆 `error` 為 null 時，才可以講「本次範圍未發現」**。「掃不到」不能讀成「乾淨」。
+
+⚠️ 用 `importlib` 載入它做探針時設 `PYTHONDONTWRITEBYTECODE=1`，否則會在被審目錄留下 `__pycache__`（自己審自己反而製造待清物）。
+
 **判讀順序（決定嚴重度，勿單看 hits 總數）**：
 1. **先看 `db_tracked` 並開 DB 數筆數**：
    ```bash
