@@ -1,7 +1,7 @@
 # ComfyUI 執行歷史鑑識：使用者 問「怎麼多出好幾張／怎麼有別的風格」時用（2026-09-10 實例）
 
 ## 症狀
-使用者 在 ComfyUI 網頁看到 output 裡有一批預期外的圖（例：「早上出的偶像打歌服出了好幾張，而且還有一張旗袍的？」），
+使用者 在 ComfyUI 網頁看到 output 裡有一批預期外的圖（例：「早上出的 A 主題出了好幾張，而且還有一張 B 主題的？」），
 但 cron 只交付 2 張。**不要憑猜回答**——ComfyUI `/history` 會留下每一輪 submit 的輸出檔名，可以完整還原。
 
 ## 方法
@@ -15,17 +15,17 @@ cd <hermes_home> && python3 scripts/list_comfy_history.py
   - ComfyUI 同名 prefix 重複 submit 會自動加 `_00002_` 計數器，可區分「原產」vs「手動重跑 duplicate」
 
 ## 2026-09-10 實例（完整還原）
-`verse_cosplay.py` 出圖（週四風格扮演日）：
+`rotation_script.py` 出圖（輪播型 cron）：
 | 時間 | 產出 | 說明 |
 |:--|:--|:--|
-| 01:00:55 | `verse_qipao_20260910_010055_1`（中華旗袍 **1 張**）| 第一輪自動輪到的風格；第 2 張沒成功 |
-| 01:03:58 | `verse_idol_stage_…_010358_1/_2`（偶像 ×2）| 重跑 → 輪到下一個風格 |
-| 01:09:57 | `verse_idol_stage_…_010957_1/_2`（偶像 ×2）| 再重跑一次 |
+| 01:00:55 | `<prefix>_styleA_<date>_010055_1`（風格 A **1 張**）| 第一輪自動輪到的風格；第 2 張沒成功 |
+| 01:03:58 | `<prefix>_styleB_…_010358_1/_2`（風格 B ×2）| 重跑 → 輪到下一個風格 |
+| 01:09:57 | `<prefix>_styleB_…_010957_1/_2`（風格 B ×2）| 再重跑一次 |
 
-→ 交付的是最後那批；旗袍那張從沒下載、變成**廢圖留在 ComfyUI output**，使用者 看到就困惑。
+→ 交付的是最後那批；風格 A 那張從沒下載、變成**廢圖留在 ComfyUI output**，使用者看到就困惑。
 
 ## 根因：順序輪（sequence/position 檔）的進度是累積的，重跑會推進一格
-`verse_cosplay.py` 的 `pick_style()`：
+`rotation_script.py` 的 `pick_style()`：
 - `_read_seq(path)` 只讀 `position`、**沒有每日重置**（`date` 欄位只是紀錄）
 - `_write_seq()` 每次 +1
 → 所以「出圖失敗／候選不足 → 重跑」會直接跳到**下一個**風格，造成三個症狀：
@@ -34,8 +34,8 @@ cd <hermes_home> && python3 scripts/list_comfy_history.py
 3. 被跳過那格的圖變廢圖堆在 output
 
 ## 通則與修法
-- ⚠️ **凡是靠 sequence/position 檔推進的 cron，重跑都會吃掉進度**——跟 `cosplay_*` 被 timeout 吃掉 4 個角色（見 SKILL.md「Wrapper timeout」段）是同一家族
-- **修法①**：失敗重跑走「指定模式」而不是自動輪下一格（`verse_cosplay.py --style "<剛才那個風格>"` / `--role "<角色>"` 指定時**不推進序**，腳本已支援）
+- ⚠️ **凡是靠 sequence/position 檔推進的 cron，重跑都會吃掉進度**——跟「被 timeout 吃掉好幾個名額」（見 SKILL.md「Wrapper timeout」段）是同一家族
+- **修法①**：失敗重跑走「指定模式」而不是自動輪下一格（`rotation_script.py --style "<剛才那個風格>"` / `--role "<角色>"` 指定時**不推進序**，腳本要支援這個開關）
 - **修法②**：手動把 sequence 檔的 `position` 退回去再重跑
 - **收尾**：ComfyUI output **不會自動清**，被丟棄的候選會一直躺著 → 交付時主動說明或清掉，別讓 使用者 看到孤兒圖再來問
 
@@ -55,7 +55,7 @@ hi = json.loads(urlopen(req).read())
 for pid, node in hi.items():
     outs = [it["filename"] for _, o in (node.get("outputs") or {}).items()
             for k in ("images", "videos", "gifs") for it in (o.get(k) or [])]
-    if not any(f.startswith("filmA_shot03") for f in outs):      # ← 用檔名前綴鎖定那一批
+    if not any(f.startswith("<prefix>") for f in outs):        # ← 用檔名前綴鎖定那一批
         continue
     seq = node.get("prompt")
     seq = seq[2] if isinstance(seq, list) and len(seq) > 2 else seq  # 🔴 prompt 欄是 LIST，workflow 在 index 2
@@ -83,7 +83,7 @@ for pid, node in hi.items():
 - 確認「這批是哪一版模型跑的」：看 `UNETLoader.unet_name` 是否等於你預期的那顆檔名。
   不同版本／量化的出圖風格差很多，而這是**事後唯一能確認的方法**（成品已經沒有 config 可查）。
 - 確認「動作句裡到底寫了哪句」：把 `TextEncodeQwenImageEditPlus.prompt` 逐字拉出來，才能跟 使用者 對帳
-  （例：抓到「**全身從頭頂到腳底完整入鏡**」那句＝母圖是半身、公式卻寫全身的直接矛盾證據）。
+  （例：抓到「全身從頭頂到腳底完整入鏡」那句＝母圖是半身、公式卻寫全身的直接矛盾證據）。
 
 ---
 

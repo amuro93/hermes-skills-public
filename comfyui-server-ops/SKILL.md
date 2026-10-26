@@ -1,6 +1,6 @@
 ---
 name: comfyui-server-ops
-description: Use when 用 HTTP API 操作一台共用的 ComfyUI 產線機 — 佇列紀律、輪詢與下載陷阱、timeout 與 partial 落盤、cron 排程、模型下載沒有 shell 時怎麼辦、升級回歸檢查。
+description: Use when 用 HTTP API 操作共用 ComfyUI：佇列、輪詢、cron。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -13,10 +13,10 @@ metadata:
 # ComfyUI HTTP API 產線維運
 
 給任何要 submit workflow / 輪詢結果 / 下載圖 / 排程批次的腳本參考。
-**通用原則**：這台機器幾乎一定不是你一個人在用（可能是你另一個 job、別的 agent、或使用者本人在上面測模型）。
+**通用原則**：這類產線機幾乎一定不是你一個人在用（可能是你另一個 job、別的 agent、或使用者本人在上面測模型）。
 所有設計都從「別人的任務也在排」這個前提出發。
 
-> 📍 端點一律用環境變數（例 `COMFYUI_URL=http://gpu-box:8188`）；文中 `$SCRIPTS` 指你自己的腳本目錄。
+> 📍 端點一律用環境變數（例 `COMFYUI_URL=http://<comfyui-host>:8188`）；文中 `$SCRIPTS` 指你自己的腳本目錄。
 
 ## 🔴🔴 佇列紀律：共用機的第一鐵律
 
@@ -71,7 +71,7 @@ for tag,items in (('執行中',d.get('queue_running',[])),('等待',d.get('queue
 1. 重試**前**先查一次「這批是不是已經進去了」：`GET /queue` 看 `queue_running`／`queue_pending` 有沒有同一個 `filename_prefix`／client 標記；或用 `GET /history` 掃 prefix。
 2. 有 → 當成成功，接回那個 `prompt_id` 繼續輪詢，**不要重送**。
 3. 沒有 → 才重試，並把重試次數印出來（`FAIL(2/5)`）。
-4. 送出時帶**唯一的 client id／prefix 尾碼**（例如 `filmA_shot03_r2`），這樣「同批重送」與「真的不同張」分得出來。
+4. 送出時帶**唯一的 client id／prefix 尾碼**（例如 `<專案>_<鏡號>_r2`），這樣「同批重送」與「真的不同張」分得出來。
 
 （同場加映：用 patch 工具改含 `\r\n` 字串的 Windows 檔會被喫成真換行 → SyntaxError；
 改用 Python 做「函式級手術」：`t.index("def X(")` … `t.index("def Y(")` 整段換掉，再 `open(..., newline="")` 寫回。）
@@ -605,7 +605,7 @@ print("缺:", sorted(need - avail))
 
 - 伺服器的 SSH／SMB 全關時，agent 沒有直接寫 `models/` 的路；但**使用者所有機器搬檔常走雲端同步資料夾**。
 - 流程：下載到本機資料槽 → `sha256sum` 對來源 hash → 複製進同步資料夾（或隨身碟）→ 他自己拖進 `models/` 對應子目錄。
-- ❌ 不要邊下邊寫同步資料夾（同步半成品會鎖檔、拖慢）；也不要從 agent 這台硬傳大檔（沒通道）。
+- ❌ 不要邊下邊寫同步資料夾（同步半成品會鎖檔、拖慢）；也不要從 agent 這端硬傳大檔（沒通道）。
 - 🔴 **同步資料夾空間可能不夠（實例：18GB 模型包直接卡住）→ 直接改走隨身碟，不要等同步失敗**。
   查磁碟：`Get-Volume | Select DriveLetter,FileSystemLabel,SizeRemaining` → 看到外接碟就複製過去，
   複製完**在目的地重跑 `sha256sum -c`**（讀回驗，不是只看來源複製成功）。先問一句「是不是這顆」。

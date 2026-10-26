@@ -8,22 +8,21 @@ Most of these were written after hitting an actual wall — a provider that sile
 
 One entry is derived from upstream work and is labelled as such: **`systematic-debugging`** is adapted from an existing MIT-licensed project, marked in both its frontmatter and its entry below.
 
-## What's Inside (14 Skills)
+## What's Inside (13 Skills)
 
-> **📖 Two of these are experience notes, not runnable tools.** `cloud-gpu-lane-ops` and `windows-python-tool-compat` document **how to operate someone else's client/runner** — the client itself is *not* bundled and was not re-verified end-to-end here. Treat them as write-ups of what we learned, **not** as download-and-use tooling. Each one opens with a "scope / what you must supply yourself" section; read that before assuming anything runs.
+> **📖 One entry is an experience note, not a runnable tool.** `windows-python-tool-compat` documents **how to operate someone else's client/runner** — the client itself is *not* bundled and was not re-verified end-to-end here. Treat it as a write-up of what we learned, **not** as download-and-use tooling; it opens with a "scope / what you must supply yourself" section.
 
 ### 🛡️ Agentic Engineering, Security & Data
-- **`systematic-debugging`** — Four-phase root-cause discipline for AI coding agents, tracing masked errors across silent `except: return []` chains, and project-wide post-fix sweeps. **Adapted from [obra/superpowers](https://github.com/obra/superpowers) (MIT — see `author` / `license` in its frontmatter); the method is upstream, the source-specific notes in `references/` were added from our own projects.**
+- **`systematic-debugging`** — The four-phase root-cause method itself comes from [obra/superpowers](https://github.com/obra/superpowers) (MIT, Jesse Vincent). **The value we add is in `references/`**: nine case-note files on masked `except: return []` chains, function-tag feedback loops, compaction claims that were never true, and post-fix sweeps across a codebase. Read it as "upstream method + our field notes", not as an original methodology.
 - **`git-secret-leak-scan`** — Two-pass GitHub account secret & SQLite DB auditing designed for AI agents (zero-plaintext output by design to prevent LLM context leakage, live key verification, API self-revocation, and WSL2 `git-filter-repo` history purging).
 - **`sqlite-cjk-fulltext-search`** — Chinese/CJK full-text search using SQLite FTS5 `trigram` tokenizer, handling the silent `<3` character query blind spot via automatic `LIKE` fallback, and WAL isolation rules.
 - **`hermes-local-state-safety`** — Safe handling of a live agent state DB (`state.db`/WAL): copy-then-open or `mode=ro` only (a bare connect triggers WAL recovery and can permanently break the gateway's write ability), three-layer liveness checks that separate "process is up" from "platform connected" from "turns actually complete", and auditing which tool/model was really called from `state.db` instead of guessing.
 
-### 🖥️ Local LLM & Cloud GPU Infrastructure
+### 🖥️ Local LLM Infrastructure
 - **`mac-mlx-ollama-deployment`** — Running LLMs on Apple Silicon via Ollama's native MLX engine (2× faster decode than GGUF/llama.cpp), importing custom safetensors weights with `--experimental`, and fixing Cloudflare Tunnel 403 Host header rejections.
-- **`cloud-gpu-lane-ops`** — 📖 *(experience note — the runner is **not** bundled)* Operating headless cloud GPU lanes (Colab CLI): quota lifecycle, automatic session teardown, and porting POSIX-only Python CLIs to Windows (`termios` stubs, `PYTHONPATH` isolation).
 
 ### 🪟 Windows Agent Operations
-- **`windows-python-tool-compat`** — 📖 *(experience note — no bundled implementation)* Why external Python tools break on Windows and how to fix each failure mode: POSIX-only imports (`termios`/`tty`/`fcntl`) stubbed into the tool's own venv `site-packages`, MSYS-vs-native path confusion, and `PYTHONPATH`/process-tree handling.
+- **`windows-python-tool-compat`** — 📖 *(experience note — no bundled implementation)* Why external Python tools break on Windows and how to fix each failure mode: POSIX-only imports (`termios`/`tty`/`fcntl`) stubbed into the tool's own venv `site-packages`, MSYS-vs-native path confusion, `PYTHONPATH`/process-tree handling, and OpenCV silently returning `None` on non-ASCII paths. Its `references/` also carries the **appendix** for the headless cloud-GPU lane (quota lifecycle, session teardown, OAuth handoff, platform-terms routing) — kept there rather than as a separate skill because it is the same Windows-porting story.
 - **`windows-app-install-verification`** — Verifying a third-party app/driver install on Windows before calling it done: UAC and reboot expectations surfaced up front, vendor launcher residue checks, and checking resource ownership before grabbing a shared GPU/service.
 
 ### 🎬 ComfyUI & Multimodal Video Generation
@@ -73,22 +72,21 @@ MIT — use them, fork them, ship them.
 
 其中一支有明確上游出處：**`systematic-debugging`** 改寫自一個 MIT 授權的既有專案，frontmatter 與下方條目都標了。
 
-## 收錄內容（共 14 支實戰 Skill）
+## 收錄內容（共 13 支實戰 Skill）
 
-> **📖 其中 2 支是「經驗文件」，不是可直接執行的工具。** `cloud-gpu-lane-ops`、`windows-python-tool-compat` 寫的是**怎麼操作別人的 client／runner**——client 本體**沒有**隨附，也沒有在本 skill 內做過完整端到端驗證。請把它們當「我們撞過什麼、怎麼繞」的筆記，**不要**當成下載即用、已驗收的工具。兩支的開頭都有一節「本文範圍（缺什麼、你要自己補什麼）」，動用前先讀那節。
+> **📖 其中 1 支是「經驗文件」，不是可直接執行的工具。** `windows-python-tool-compat` 寫的是**怎麼操作別人的 client／runner**——client 本體**沒有**隨附，也沒有在本 skill 內做過完整端到端驗證。請把它當「我們撞過什麼、怎麼繞」的筆記，**不要**當成下載即用、已驗收的工具；它的開頭有一節「本文範圍（缺什麼、你要自己補什麼）」，動用前先讀那節。
 
 ### 🛡️ AI Agent 工程、資安與中文檢索（4 支）
-- **`systematic-debugging`** — 專治 AI Coding Agent「亂猜亂改」的四階段根因除錯紀律：追蹤被多層 `except: return []` 靜默吞掉的錯誤鏈，以及修復後的跨專案同型態問題清查。**改寫自 [obra/superpowers](https://github.com/obra/superpowers)（MIT，見該檔 frontmatter 的 `author` / `license`）—— 方法論是上游的，`references/` 裡的專案案例筆記才是我們自己補的。**
+- **`systematic-debugging`** — 四階段根因方法論本體來自 [obra/superpowers](https://github.com/obra/superpowers)（MIT，Jesse Vincent）。**本集加值的是 `references/` 那九份案例筆記**：被 `except: return []` 吃掉的整條錯誤鏈、function tag 的自我強化迴圈、壓縮摘要裡從未成立的宣稱、以及修完之後的跨專案清查。定位是「上游方法 ＋ 我們的實戰筆記」，不是原創方法論。
 - **`git-secret-leak-scan`** — 專為 AI Agent 設計的 GitHub 全帳號機密與 SQLite DB 兩階段稽核（內附 `scripts/scan_repos_secrets.py` 預設零明文脫敏掃描器，防止真 Key 落入 LLM Context 外洩）、金鑰驗活與無後台權限時的 API 自我撤銷、以及 Windows 透過 WSL2 `git-filter-repo` 清洗歷史的完整 SOP。
 - **`sqlite-cjk-fulltext-search`** — SQLite FTS5 `trigram` 中文全文檢索實作：解決預設分詞器搜不到中文的問題、自動分流 `<3` 字短詞回退 `LIKE`（避開 `trigram` 對兩字詞安靜回傳 0 筆的盲區），以及 WAL 跨進程隔離原則。
 - **`hermes-local-state-safety`** — 使用中的 agent 狀態庫（`state.db`／WAL）安全操作：只能「先複製再開」或 `mode=ro`（裸 connect 會觸發 WAL recovery，可能讓 gateway 永久失去寫入能力）、把「進程活著／平台連上／turn 跑得完」分三層驗，以及從 `state.db` 撈出「某工具或某顆模型這幾天真的被叫幾次」而不是靠印象答。
 
-### 🖥️ 本地 LLM 與雲端 GPU 基礎設施（2 支）
+### 🖥️ 本地 LLM 基礎設施（1 支）
 - **`mac-mlx-ollama-deployment`** — 在 Apple Silicon 上使用 Ollama 原生 MLX 引擎部署 LLM（解碼速度為 GGUF/llama.cpp 的 2 倍）、`--experimental` 匯入自訂 safetensors 權重，以及修復 Cloudflare Tunnel 403 Host 標頭阻擋。
-- **`cloud-gpu-lane-ops`** — 📖 *（經驗文件：runner **未**隨附）* 將無頭雲端 GPU（Colab CLI）作為自動化運算產線：配額與工作階段生命週期管理、工作負載分流，以及將 POSIX 專屬 Python CLI 移植至 Windows 的三件套解法（`termios` stub、`PYTHONPATH` 隔離、程序樹終止）。
 
 ### 🪟 Windows Agent 維運（2 支）
-- **`windows-python-tool-compat`** — 📖 *（經驗文件：無隨附實作）* 外部 Python 工具在 Windows 上跑不起來的逐項解法：POSIX 專屬 import（`termios`／`tty`／`fcntl`）要 stub 進該工具自己的 venv `site-packages`、MSYS 與原生路徑不互轉的混淆，以及 `PYTHONPATH` 與程序樹收尾。
+- **`windows-python-tool-compat`** — 📖 *（經驗文件：無隨附實作）* 外部 Python 工具在 Windows 上跑不起來的逐項解法：POSIX 專屬 import（`termios`／`tty`／`fcntl`）要 stub 進該工具自己的 venv `site-packages`、MSYS 與原生路徑不互轉的混淆，以及 `PYTHONPATH` 與程序樹收尾；另含 OpenCV 在非 ASCII 路徑靜默回 `None` 的繞法。它的 `references/` 另外帶著**雲端 GPU 產線的附錄**（配額／session 生命週期、OAuth 交接、平台條款分流）—— 放在那裡而不是獨立一支，因為那是同一套 Windows 移植故事的後半段。
 - **`windows-app-install-verification`** — 在 Windows 裝第三方 app／驅動之後怎麼驗收才算完成：開跑前先講清楚會跳 UAC 與可能要重開機、廠商 launcher 的解壓與登錄檔殘留檢查、以及動共用 GPU／服務前先確認所有權。
 
 ### 🎬 ComfyUI 與多模態影音生成工程（4 支）

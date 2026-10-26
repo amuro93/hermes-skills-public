@@ -1,6 +1,6 @@
 ---
 name: ai-video-qa
-description: Use when 驗收 AI 生成影片 — 抽幀 QA、規格一致性、首尾幀過渡陷阱。只管「怎麼驗、怎麼不過關就定因」，不管各家 API 怎麼呼叫。
+description: Use when 驗收 AI 生成影片：抽幀密度、規格、首尾幀陷阱。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT

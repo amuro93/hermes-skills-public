@@ -1,6 +1,6 @@
 ---
 name: git-secret-leak-scan
-description: Use when 懷疑 API key 外洩或查 GitHub repo 含 secrets/DB。批次掃描、驗活、WSL2 git-filter-repo 歷史清理。
+description: Use when 查 repo 機密外洩或清 git 歷史（零明文輸出）。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -115,7 +115,7 @@ git clone https://github.com/<owner>/<repo>.git clean_work
 cd clean_work
 
 # 2. 透過 WSL2 從全歷史移除目標檔案（WSL2 因 CRLF 會認定 dirty，必加 --force）
-wsl.exe -d Ubuntu -- bash -c "cd /mnt/c/path/to/clean_work && python3 /mnt/c/Python311/Lib/site-packages/git_filter_repo.py --force --invert-paths --path 'data/chat_history.db'"
+wsl.exe -d Ubuntu -- bash -c "cd /mnt/c/<clone 路徑> && python3 <site-packages>/git_filter_repo.py --force --invert-paths --path '<要清掉的路徑>'"
 ```
 
 ### 🔴 歷史重寫後的三項必查（防漏網之魚）

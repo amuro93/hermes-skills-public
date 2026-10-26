@@ -1,6 +1,6 @@
 ---
 name: hermes-local-state-safety
-description: Use when 查 Hermes 本地狀態檔（state.db／WAL／config）或要用腳本撈裡面的紀錄。
+description: Use when 查 Hermes 本地狀態檔（state.db／WAL／config）。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -51,7 +51,7 @@ con.execute("PRAGMA page_count").fetchone()[0]
 
 ## 🩺 三層存活判定：「進程在」≠「平台連上」≠「turn 跑得動」
 
-被問「妳現在到底活著嗎」時，這三層要分開驗；只看一層就會誤判（實例：進程活著、Telegram 連上，
+被問「服務現在到底有沒有在回」時，這三層要分開驗；只看一層就會誤判（實例：進程活著、平台連得上，
 但**每個 turn 一建 agent 就炸** → 使用者看到的是「一句話都不回」，跟「掛掉」看不出區別）。
 
 | 層 | 看什麼（以 profile 為單位的正本） | 判準 |

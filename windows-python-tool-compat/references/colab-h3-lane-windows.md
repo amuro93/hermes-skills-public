@@ -31,7 +31,8 @@ git clone --depth 1 https://github.com/killkli/minimax-h3-colab-skill.git ~/proj
 - token 落地：`~/.config/colab-cli/token.json`（Windows＝`C:\Users\<user>\.config\colab-cli\token.json`）。
 - `--auth=oauth2 usage` 授權完直接印 CU 餘額 ＝ 同時驗證授權 ✅
 - 額度＝Google AI Pro 附的 Colab CU（Pro 每月約 200 CU）；**消耗速率要實測**（跑前跑後各記一次 `usage` 差額），別信新聞寫的「1 CU 一支」。
-- 🔴 **這條線只跑 SFW**：Colab 條款禁止成人內容；違規是整個 Google 帳號（訂閱＋雲端硬碟）出事。NSFW 留在 5080／RunningHub。
+- 🔴 **條款不允許的內容不要走這條**：違規的後果是整個 Google 帳號（訂閱＋雲端硬碟）一起出事，不只是這條運算節點。
+  → 動手前先讀平台條款，把「這份工作適不適合走雲端免費額度」當成**路由決策**，而不是先送再說。
 
 ## 批次（省 CU 的正解）
 

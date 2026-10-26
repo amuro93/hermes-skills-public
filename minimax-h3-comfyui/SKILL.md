@@ -1,6 +1,6 @@
 ---
 name: minimax-h3-comfyui
-description: Use when 用 MiniMax H3 做影片生成（量化選型、ComfyUI 工作流、Turbo 加速）。
+description: Use when 跑 MiniMax H3 影片生成：量化選型、ComfyUI 工作流。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -102,6 +102,17 @@ SamplerCustomAdvanced → VAEDecode + VAEDecodeAudio → CreateVideo(fps=24) →
 - **人臉與膚質自然感 Prompt 守則**：
   - 避免寫 `glowing skin`、`dewy skin`、`8k masterpiece`（會將高光推向純白造成塑膠蠟像油臉）。
   - 改用底片消光與真實毛孔詞彙：`matte natural skin texture, visible fine pores, subtle subsurface scattering, soft diffused lighting, Kodak Portra 400 film grain`。
+
+## 兩套裝法：16GB 先跟哪一套（先讀這段再往下）
+
+本文同時寫了**兩套可用的權重配置**，別混著裝：
+
+1. **GGUF 系列（`UnetLoaderGGUF` 載入）** —— 對應 `templates/download_minimax_h3.sh`，一條命令把該有的檔抓齊。
+   👉 **16GB 卡第一次裝、只想快點跑起來：跟這套。**
+2. **safetensors 量化系列（`UNETLoader` 載入）** —— 伺服器實測用的另一種裝法，檔名、載入節點、需要的 patch 都不同。
+   👉 只有在你已經有一台跑著 safetensors 的機器、或要沿用別人的 workflow JSON 時才走這套。
+
+⚠️ 兩套的**載入節點不同**（GGUF 走 `UnetLoaderGGUF`、safetensors 走 `UNETLoader`），拿 A 的 workflow 配 B 的權重一定載不到。
 
 ## 下載與驗證習慣
 - **直接提供 HuggingFace resolve URL**，完整網址清單見 `references/minimax-h3-repos.md`

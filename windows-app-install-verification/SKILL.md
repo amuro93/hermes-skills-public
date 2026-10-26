@@ -1,6 +1,6 @@
 ---
 name: windows-app-install-verification
-description: "Use when 在這台 Windows 主機安裝第三方 app／驅動元件並驗收。"
+description: Use when 在 Windows 裝第三方 app／驅動並驗收。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -12,12 +12,12 @@ metadata:
     related_skills: [windows-python-tool-compat]
 ---
 
-# 在這台 Windows 主機安裝第三方 App／驅動元件
+# 在 Windows 主機安裝第三方 App／驅動元件
 
 ## When to Use
 
 - 使用者丟一個 Windows 應用過來要求「裝起來」（NVIDIA 系、廠商 launcher、帶虛擬裝置驅動的 app）。
-- 使用者自己裝卻「按了同意就沒反應」、重試與重開機都一樣。
+- 使用者自己裝卻「按了同意就沒反應」，重試與重開機都一樣。
 - 裝的東西會碰系統層（驅動、服務、虛擬裝置、帶來重開機風險）。
 
 適用：任何**不是 Hermes 本體**的外部應用；Hermes 自身的升級／修復走作者內部的 `hermes-upgrade-bitwarden` 流程（**本系列未收錄**）。
@@ -107,4 +107,4 @@ $p = Start-Process -FilePath "<dir>\setup.exe" -ArgumentList "-s","-noreboot" `
 ## 收尾
 
 - 安裝檔、解壓目錄、診斷腳本與 log 集中放在同一資料夾（例如 `~/projects/research/<app>/`），回報時給路徑。
-- 把「這台裝在哪、能不能被驅動、限制是什麼」寫進對應的產線 skill（下次不用重新摸底）。
+- 把「裝在哪台、能不能被驅動、限制是什麼」寫進對應的產線 skill（下次不用重新摸底）。

@@ -1,43 +1,22 @@
----
-name: cloud-gpu-lane-ops
-description: Use when 跑雲端 GPU 產線（Colab CLI）：額度、session、Windows。
-version: 1.0.0
-author: Drizzt Studio
-license: MIT
-tags: [colab, cloud-gpu, credits, windows, oauth, ops]
-metadata:
-  hermes:
-    tags: [colab, cloud-gpu, credits, windows, oauth, ops]
-    related_skills: [minimax-h3-comfyui, systematic-debugging]
----
+# 附錄：雲端 GPU 產線（Colab CLI 類）的操作知識
 
-# 雲端 GPU 產線操作（Colab CLI 類）
+> 這是 `windows-python-tool-compat` 的**附錄**，不是獨立 skill。
+> 主文談「外部工具在 Windows 上怎麼才跑得動」；這裡放**雲端額度／session／授權／條款**這一層的操作知識，
+> 因為那條產線正好是「Windows 上的 POSIX-only CLI」的實例，兩者一起讀才完整。
 
-> 📖 **範圍宣告：本文是「經驗文件」，不是下載即用的工具。**
-> `runner.py` 屬第三方 repo（見下節），**沒有隨附**；本 skill 只記錄在 Windows 上要補哪些 patch、
-> 以及額度／session／驗收的操作知識，沒有在公開版做過完整端到端重跑。
+## 這份附錄的範圍
 
-## When to use / 觸發時機
-- 要用雲端 GPU 額度跑生成任務（例：Colab CLI 跑 MiniMax-H3 Ref2VA，本機只上傳參考圖＋prompt，跑完拉成品回來）
-- 雲端 session 開不起來、額度怎麼算、要不要重試
-- 要把一套 POSIX-only 的雲端 CLI 搬到 Windows 主機上跑
-
-配套：花錢與送件紀律＝本 skill §1（額度與 session 生命週期）＋ §2（GPU 規格與額度層級）；
-通用除錯紀律看 `systematic-debugging`。各模型自己的 prompt 結構與失敗模式，留在該產線的 skill。
-
-## 本文範圍（缺什麼、你要自己補什麼）
-
-⚠️ **本文不含 `scripts/runner.py`**。它來自第三方 repo
-[`killkli/minimax-h3-colab-skill`](https://github.com/killkli/minimax-h3-colab-skill)（`--depth 1` clone 即可），
-本 skill 只記錄「在 Windows 上要補哪兩個 patch 才跑得動」，以及額度／session／驗收的操作知識。
+⚠️ **不含 `scripts/runner.py`**。它來自第三方 repo
+[`killkli/minimax-h3-colab-skill`](https://github.com/killkli/minimax-h3-colab-skill)（`--depth 1` clone 即可）。
+本附錄只記錄操作知識與驗收標準，沒有在公開版做過完整端到端重跑。
 
 要重現的完整條件：
 1. clone 該 repo（`install.sh` 只裝 Codex skill 那層，**不用跑**），直接呼叫 `scripts/runner.py`
-2. 依 §4 補 `termios.py`／`tty.py` stub，並把 `os.killpg` 換成 `taskkill /T`
+2. `termios.py`／`tty.py` stub 與 `os.killpg` → `taskkill /T` 的補丁照**主文 §2／§3** 做
 3. 用 `env -u PYTHONPATH` 執行，避免吃到外層 venv
 4. 授權（OAuth）由使用者本人完成一次，憑證只留在本機 `~/.config/colab-cli/token.json`
 
-驗收標準仍以本 skill 列的四項為準（檔案本體＋`ffprobe`＋`progress*.json`＋餘額），與 runner 由誰實作無關。
+驗收標準仍以本文列的四項為準（檔案本體＋`ffprobe`＋`progress*.json`＋餘額），與 runner 由誰實作無關。
 
 ## 0. 首次建置 runbook（從零到能跑一支片）— Windows 實測 2026-09-29
 
@@ -87,17 +66,6 @@ metadata:
 - 因此雲端免費通道**僅用於標準公開素材與一般運算任務**；需無審查或載入自訂私有權重的工作負載，應配置於本地 GPU 或專為高自由度推論設計的專屬雲端 API。
 - 部署初期即應明確劃分工作負載路由規則，避免混用導致帳號風險。
 
-## 4. 把 POSIX-only CLI 搬到 Windows（實測三件套）
-1. **`termios` / `tty`**：POSIX 專屬模組，import 就爆（通常只有互動 console 路徑用到）
-   → 在該 CLI 的 venv `site-packages/` 放 stub（常數定義＋函式 `raise NotImplementedError`），非互動指令就過得去。
-2. **`env -u PYTHONPATH`**：Hermes 的 terminal 會把 `PYTHONPATH` 指向自己的 venv → 蓋掉 uv tool venv 的套件
-   （症狀：`pydantic_core` 載錯／`No module named 'pydantic_core._pydantic_core'`）。
-   **跑任何 `uv tool install` 裝的 CLI 一律加 `env -u PYTHONPATH`。**
-3. **`os.killpg` / `start_new_session`**：Windows 沒有 `os.killpg` → patch 成 `os.name == "nt"` 時走 `taskkill /T /PID`，並在 Windows 關掉 `start_new_session`。
-- 執行前記得 `export PATH="$HOME/.local/bin:$PATH"`（uv tool 的 bin 位置）。
-- 這些修在**本機 clone**，上游更新會蓋掉 → 把「動過哪些檔、改了什麼」列在產線 skill 裡，升級後重打。
-- 先跑**離線測試**（不耗額度）驗邏輯層：Windows 上「測 POSIX exec」的測試紅是預期（假 CLI 是 `#!` shebang 腳本、`chmod 0o755`），**純 Python 邏輯那幾項才是判斷點**。
-
 ## 5. OAuth／授權流程（憑證不落地）
 - 給使用者一支**可雙擊的腳本**（Windows `.cmd`）去開授權網址，**授權碼貼在他自己的視窗**——憑證不進聊天、不寫檔。
 - 授權完成後立刻用唯讀查詢印一次額度，當作**授權成功的證據**（他看得到數字才安心）。
@@ -112,3 +80,9 @@ metadata:
 - **不要用 `patch` 直接改遠端 notebook 的 JSON**：會把引號吃進去、JSON 破損 → 用**行級修補腳本**改（先驗 `json.load` 再上傳）。
 - notebook 裡**硬編的尺寸／長度常數就是可用旋鈕**（例如 `WIDTH, HEIGHT`——通常 32 的倍數都可），但**參考圖比例最好跟輸出同比例**。
 - 上游 repo 可能**沒有 license**：記錄下來給使用者判斷，不要拿它當「所以不要用」的理由。
+
+---
+
+## Windows 移植三件套
+
+這一節已升級為主文：見 SKILL.md §2（POSIX-only stdlib stub）、§3（subprocess 的 POSIX 引數）、§1（`env -u PYTHONPATH`）。

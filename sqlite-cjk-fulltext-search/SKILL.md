@@ -1,6 +1,6 @@
 ---
 name: sqlite-cjk-fulltext-search
-description: Use when 為中文內容做 SQLite 全文檢索（FTS5 trigram + 短詞 LIKE 分流）。
+description: Use when 為中文內容做 SQLite 全文檢索（FTS5 trigram）。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT

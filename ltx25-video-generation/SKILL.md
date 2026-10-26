@@ -1,6 +1,6 @@
 ---
 name: ltx25-video-generation
-description: Use when 在 ComfyUI 跑 LTX-2.5 出片（5080 原生／Sulphur workflow、duration head 自動片長）。
+description: Use when 在 ComfyUI 跑 LTX-2.5 出片（含 duration head）。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
@@ -84,17 +84,17 @@ UNETLoader(nvfp4) + CLIPLoader(gemma4-int8, type=ltxv) + VAELoader×2(video+audi
 3. **stage1 sigma 用 BasicScheduler(linear_quadratic, 8 steps, denoise=1)** 取代 ManualSigmas 9 值（效果相同但這是社群慣例）
 4. **sampler 用 euler**（社群 workflow 不用 euler_ancestral）
 5. **巨量負面詞**含 audio/video 品質項（blurry/mismatched lip sync/silent audio/off-sync 等）——NAG 吃的負面詞要完整
-- ✅ **實測結論：NAG+DualCFG 版動態與畫質較自然，建議定為預設配方**（NAG + DualCFG + euler + 完整負面詞）
+- ⚖️ **我們的測試裡 NAG+DualCFG+euler+完整負面詞那一版動態與畫質較自然**——可當**起點**，但請拿你自己的素材與原本那版 A/B 一次再定案（不同模型／不同題材會翻盤）。
 
 ## Prompt 技巧
-- **鎖年齡**：銀短髮+夜間燈光容易顯老 → prompt 寫死 "young woman in her early twenties, 24 years old, smooth youthful skin, no wrinkles" + 負面詞加 "old woman, wrinkles, gray hair, elderly"
-- LTX 照字面畫，細節要寫死（跟 KREA2 一樣的圖文一致鐵律）
+- LTX 照字面畫，細節要寫死（跟 KREA2 一樣的圖文一致鐵律）。
+- 角色長相、年齡、服裝屬**角色設定**，寫在你的角色 prompt／參考圖裡，不要抄本文——這裡只談「怎麼讓模型照做」。
 
-## 效能（9/8 實測）
+## 效能（9/8 粗感，不是計時數據）
 - 單 stage + duration head：submit 到出片約 1-2 分鐘內（含 22B 載入）
 - two-stage（+upscale + refine）：略久但還是明顯比 H3 快
-- ⚠️ 精確秒數未計時，別瞎掰 timing
+- ⚠️ **精確秒數當時沒有計時**；而且這條線後來**沒有當日常出片主力** —— 上面的數字只當「比 H3 快」的相對參考，不要拿去排班或對外報效能。
 
 ## 相關
-- 官方 example workflows：`/tmp/ComfyUI-LTXVideo/example_workflows/2.5/`（subgraph 格式，當結構參考）
+- 官方 example workflows：在你自己的 ComfyUI-LTXVideo 安裝目錄下 `example_workflows/2.5/`（subgraph 格式，只能當結構參考，不能直接餵 `/prompt`）
 - HF repo：`Lightricks/LTX-2.5`（gated，要 Agree and Access）

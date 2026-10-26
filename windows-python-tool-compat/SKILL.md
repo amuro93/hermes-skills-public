@@ -19,13 +19,13 @@ metadata:
 
 ## When to Use
 
-- `uv tool install` 裝的 CLI、clone 回來的第三方 repo、獨立 venv 的工具，在這台機器上 import／執行失敗。
+- `uv tool install` 裝的 CLI、clone 回來的第三方 repo、獨立 venv 的工具，在你的 Windows 機器上 import／執行失敗。
 - 看到 `ModuleNotFoundError`（特別是 `pydantic_core._pydantic_core`）或 `No module named 'termios'/'tty'`。
-- 要把 Linux/macOS 導向的 Python 工具（含它自己的測試）搬到這台 Windows 主機上跑。
+- 要把 Linux/macOS 導向的 Python 工具（含它自己的測試）搬到 Windows 主機上跑。
 - 工具的 OAuth／登入得由使用者本人完成，需要安排「他做那一步、我接手其餘」的交接。
 
 適用範圍：任何**不是 Hermes 本體**的 Python 工具 —— `uv tool install` 裝的 CLI、clone 回來的 repo 腳本、獨立 venv。
-這台機器上它們會踩到幾個固定的坑；照下面順序處理，通常一次就通，不必出動 Docker／WSL。
+在 Windows 上它們會踩到幾個固定的坑；照下面順序處理，通常一次就通，不必出動 Docker／WSL。
 
 先決：環境是 git-bash（MSYS）+ native Windows Python；Hermes profile 目錄常被 junction 到別的磁碟，用哪個路徑寫都通（重點是前後一致）。
 
@@ -131,13 +131,15 @@ def imwrite_u(p, img, q=96):
 
 `cv2.FaceDetectorYN` 吃 numpy array，只要圖是 imdecode 進來的就不受影響；`cv2.VideoCapture("中文.mp4")` 也一樣要繞（先確認能不能開，失敗一樣是靜默的）。
 
-## 附：worked example
+## 附：references／worked example
 
-`references/colab-h3-lane-windows.md` —— MiniMax H3 Colab 產線（uv tool CLI + clone 來的 runner + 遠端複製貼上 OAuth）
-在這台 Windows 上的建置步驟與**當時的**驗證紀錄，可當同類工具的模板。
+- `references/colab-h3-lane-windows.md` —— MiniMax H3 Colab 產線（uv tool CLI + clone 來的 runner + 遠端複製貼上 OAuth）
+  在 Windows 上的建置步驟與**當時的**驗證紀錄，可當同類工具的模板。
+- `references/colab-lane-ops.md` —— **附錄**：同一條產線的雲端側操作知識（額度／session 生命週期、GPU 規格分層、
+  平台條款與工作負載分流、OAuth 交接）。想知道「這份工作該不該走雲端」看這份。
 
 ⚠️ **那份紀錄不是「已完全可用」的證明，請照實讀**：
 - OAuth 只驗到「吐授權網址＋等貼碼」就中止（刻意不完成登入、不耗額度）→ **token 落地那段沒有實測過**
 - 專案自帶的離線測試是 8 項中 4 綠 4 紅，紅的全是「Windows 沒有 POSIX exec」的 harness 問題
-- 🔴 **`--help` 跑得起來 ≠ import 全綠**：`--help` 只證明「這條 import 路徑在這台機器上過得去」。
+- 🔴 **`--help` 跑得起來 ≠ import 全綠**：`--help` 只證明「這條 import 路徑在當前這部機器上過得去」。
   真正的驗收要跑一次**會走到目標程式碼**的命令（例如 `runner.py usage`），或對每個要用的模組 `python -c "import <mod>"` 逐一驗。

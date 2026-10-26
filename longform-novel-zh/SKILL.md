@@ -1,6 +1,6 @@
 ---
 name: longform-novel-zh
-description: Use when 寫繁體中文長篇小說（分章產出、記憶卡、跨章一致性）。
+description: Use when 寫繁體中文長篇小說：分章、記憶卡、跨章一致。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT

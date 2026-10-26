@@ -1,6 +1,6 @@
 ---
 name: fiction-chapter-qc
-description: Use when 小說章節／番外交稿試讀前要跑 QC（風格詞、簡體字、跨章逐字重複、字數／空稿門檻）。
+description: Use when 小說交稿前跑 QC：風格詞、簡體字、逐字重複。
 version: 1.0.0
 author: Drizzt Studio
 license: MIT
