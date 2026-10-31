@@ -1,8 +1,0 @@
-# Test and framework dependencies for running the standalone LINE listener test suite
-# (Intended to run inside an existing NousResearch/hermes-agent environment)
-pytest
-pytest-asyncio
-ruamel.yaml
-python-dotenv
-httpx
-aiohttp

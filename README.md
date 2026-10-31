@@ -37,8 +37,8 @@ One entry is derived from upstream work and is labelled as such: **`systematic-d
 
 ## Source Extensions / 原始碼擴充
 
-- **[Hermes LINE quiet-listening extension](extensions/hermes-line-listener/README.md)** — Audited source patch distribution, **not an installable skill**. Quiet group-message buffering, real-mention wake gate, shared group sessions, bounded history pages and delivery-aware acknowledgement. Includes upstream Nous Research MIT notice and 134 locally passing tests. Generalized configuration has not been production-tested in live LINE traffic; requires a compatible Hermes checkout and manual application.
-- **[LINE 群聊安靜旁聽擴充](extensions/hermes-line-listener/README.md)** — 附原始碼、測試與授權的修補包，**不是可直接安裝的 skill**。預設關閉，需設定核准群；保留上游 MIT 與修改歸屬。通用版通過 134 項本機測試，尚未經真實 LINE 流量驗證，請先讀版本及手動安裝限制。
+- **[Hermes LINE quiet-listening extension](https://github.com/amuro93/hermes-line-listener)** — Maintained in its own repository. This is a source patch distribution, **not an installable skill**. Includes code, tests, upstream MIT attribution and manual installation instructions. Basic behavior received small-scale live LINE validation in its private predecessor; configurable public allowlist has not yet had a separate live-group regression or load test.
+- **[LINE 群聊安靜旁聽擴充](https://github.com/amuro93/hermes-line-listener)** — 已移至獨立 repo，包含原始碼、測試、授權及手動安裝說明，**不是直接安裝的 skill**。基本功能已有真實 LINE 群小規模驗證；公開版可配置核准群設定尚未另做真群回歸或大量流量測試。
 
 ## Layout
 
