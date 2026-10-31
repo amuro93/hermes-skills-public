@@ -1,0 +1,43 @@
+# Environment & credentials
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+
+# SQLite databases & WAL/SHM files
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Logs
+*.log
+logs/
+
+# Python / pytest caches & scratch directories
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+scratch/
+line_history_pages/
+
+# Backups & editor temporary files
+*.bak
+*.backup
+*.orig
+*.tmp
+*.swp
+*~
+_backups/
+
+# Internal task briefs & preparation reports (excluded from public release artifact)
+TASK*.md
+*REPORT*.md

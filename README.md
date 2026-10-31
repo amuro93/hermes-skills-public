@@ -35,6 +35,11 @@ One entry is derived from upstream work and is labelled as such: **`systematic-d
 - **`longform-novel-zh`** — Chapter-by-chapter drafting workflow using a bounded context memory card (Story Bible + ≤300-char rolling summary + chapter outline). Cross-chapter consistency auditing (forms of address, spatial layouts, timelines, character knowledge chains) is included as `references/cross-chapter-consistency.md`.
 - **`fiction-chapter-qc`** — Automated pre-submission quality gate (includes `scripts/verify_chapter_qc.py`): style-tic frequency thresholds, curated Simplified-Chinese leakage detection, and longest-contiguous-shared-segment detection against previous chapters (default ≥8 characters).
 
+## Source Extensions / 原始碼擴充
+
+- **[Hermes LINE quiet-listening extension](extensions/hermes-line-listener/README.md)** — Audited source patch distribution, **not an installable skill**. Quiet group-message buffering, real-mention wake gate, shared group sessions, bounded history pages and delivery-aware acknowledgement. Includes upstream Nous Research MIT notice and 134 locally passing tests. Generalized configuration has not been production-tested in live LINE traffic; requires a compatible Hermes checkout and manual application.
+- **[LINE 群聊安靜旁聽擴充](extensions/hermes-line-listener/README.md)** — 附原始碼、測試與授權的修補包，**不是可直接安裝的 skill**。預設關閉，需設定核准群；保留上游 MIT 與修改歸屬。通用版通過 134 項本機測試，尚未經真實 LINE 流量驗證，請先讀版本及手動安裝限制。
+
 ## Layout
 
 ```
