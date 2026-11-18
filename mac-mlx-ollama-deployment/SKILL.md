@@ -23,8 +23,9 @@ license: MIT
 
 ### 1. 安裝
 ```bash
-# Ollama（curl 一鍵裝，或官網 .dmg）
-curl -fsSL https://ollama.com/install.sh | sh
+# Ollama（官網 .dmg，或先把安裝腳本存下來看過再跑）
+curl -fsSL https://ollama.com/install.sh -o /tmp/ollama-install.sh
+sh /tmp/ollama-install.sh
 # 驗證版本（0.19+ 才有 MLX）
 ollama --version
 # Xcode CLT（首次 python3 會自動要求；也可手動）
