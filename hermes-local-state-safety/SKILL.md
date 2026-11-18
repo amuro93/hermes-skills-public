@@ -106,9 +106,9 @@ ORDER BY m.timestamp;
 | 要查 | 怎麼查 | 坑 |
 |:--|:--|:--|
 | vision 用哪顆 | `config.yaml` 的 **`auxiliary:` → `vision:`（provider/model）** | `hermes config get vision` 回「Config key not set」是**假警報**（真 key 是 `auxiliary.vision`）；`grep '^vision:'` 也找不到 |
-| 這條路由何時被改的 | profile 目錄下的 `config.yaml.bak_visionfix_<日期>` diff 前後 | 備份檔名就是時間軸（實例：`google/gemini-3.8-flash` → `custom/deepseek-flash`）|
+| 這條路由何時被改的 | profile 目錄下的 `config.yaml.bak_<修訂名>_<日期>` diff 前後 | 備份檔名就是時間軸（實例：`providerA/model-1` → `providerB/model-2`）|
 | 每次對話真的用哪顆 | `logs/agent.log`：`agent.turn_context: conversation turn: ... model=<m> provider=<p>` | 這行是**最可信**的（每次 turn 都印） |
-| 有沒有偷偷落到 fallback | `grep "Fallback activated" logs/agent.log`（`gemini-3.8-flash → grok-4.6 (xai)`） | fallback 是**真的花錢**（見 `hermes-provider-failover`）|
+| 有沒有偷偷落到 fallback | `grep "Fallback activated" logs/agent.log`（格式：`<主模型> → <備援模型> (<provider>)`） | fallback 是**真的花錢**（見 `hermes-provider-failover`）|
 | vision 那次用哪顆 | `logs/agent.log`：`tools.vision_tools: Processing image with vision model...` | ⚠️ **這行不含模型名** → 要回 config 對；另 log 只記開始/完成＋字元數，不記 provider |
 
 - 相關 log 位置：`<profile>/logs/agent.log`（主）、`gateway.log`、`gateway-stdio.log`（auxiliary/vision 的 WARNING 在這）、`errors.log`
@@ -119,7 +119,7 @@ ORDER BY m.timestamp;
 - 這條同時是**花錢審計**：被問到「你有沒有花到 X 家的錢」時，看的是 `Fallback activated` 與 `API call ... provider=xai`，
   不是看 config 裡有沒有那家。
 - 🔴 **`provider=xai` 與 `provider=xai-oauth` 是兩種帳**：前者吃 **API 帳**（按 token 計費），後者走 **OAuth／訂閱**。
-  2026-09-22 使用者親自更正（他看到某個 profile 的主模型是 grok-4.6 就走 OAuth，跟 API 帳無關）
+  實戰更正：某個 profile 的主模型看起來像 A 家，實際走的是 **OAuth／訂閱**帳，跟 A 家的 API 帳無關
   → 查「誰在燒錢」時**先確認 provider 字串**，不要看到模型名就定罪。
 - 跨 agent／跨機的完整對帳流程（憑證指紋盤點、非 Hermes 消費者、peer fan-out、回報四件套）→ 屬作者內部的 `api-spend-forensics`（**本系列未收錄**；
   它附的 `scripts/audit_provider_calls.py` 會掃所有 profile 的 `agent.log` 按日／provider／session 聚合 calls 與 tokens）。

@@ -9,10 +9,10 @@ license: MIT
 # Mac (Apple Silicon) LLM 伺服器部署 — Ollama + MLX
 
 ## 適用場景
-- 地端 LLM 伺服器（Apple Silicon M3 Max 64GB 等）取代雲端 API 供本地 Agent 呼叫
+- 地端 LLM 伺服器（Apple Silicon 等）取代雲端 API 供本地 Agent 呼叫
 - 需要匯入 HuggingFace 上的 MLX 格式模型（含 abliterated / fine-tuned safetensors 權重）
 
-## 關鍵環境事實（M3 Max 64GB 實證）
+## 關鍵環境事實（Apple Silicon 實測）
 - **Ollama 0.19+ 在 Apple Silicon 內建 MLX 引擎**（decode 比舊版 llama.cpp 快 ~2 倍，官方 benchmark：M5 Max 35B MoE 58→112 tok/s）
 - **GGUF 模型在 Mac 上走 llama.cpp Metal 路徑，吃不到 MLX 加速**——27B GGUF 實測僅 6.2 tok/s
 - **MLX 格式模型才有 MLX 加速**（實測 4K context: prefill 641.7 / gen 33.2 tok/s）

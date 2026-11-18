@@ -29,17 +29,21 @@ for arg in "$@"; do
   esac
 done
 
+fsize() { # 跨平台取檔案 byte 數：GNU 與 BSD 的 stat 參數不相容，改用 wc
+  if [ -f "$1" ]; then wc -c < "$1" | tr -d '[:space:]'; else echo 0; fi
+}
+
 dl() { # $1=repo $2=path $3=destdir $4=expect_bytes
   local url="https://huggingface.co/$1/resolve/main/$2"
   local out="$3/$(basename "$2")"
   mkdir -p "$3"
   echo ">>> $2"
-  if [ -f "$out" ] && [ "$(stat -c%s "$out" 2>/dev/null || echo 0)" -ge "$4" ]; then
+  if [ -f "$out" ] && [ "$(fsize "$out")" -ge "$4" ]; then
     echo "    已存在，跳過"
   else
     curl -L --fail --progress-bar -C - "$url" -o "$out"
   fi
-  local got=$(stat -c%s "$out" 2>/dev/null || echo 0)
+  local got=$(fsize "$out")
   if [ "$got" -lt "$4" ]; then
     echo "    ❌ 大小不符 (expect >= $4, got $got)" >&2
     exit 1

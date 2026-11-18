@@ -59,7 +59,7 @@ curl -s <raw workflow url> | grep -oE '[A-Za-z0-9_\-\./]+\.(gguf|safetensors)' |
 # 5. 交付前驗證每個下載 URL
 curl -sIL -o /dev/null -w "%{http_code}\n" <resolve url>   # 200 = 存在
 ```
-注意: 執行環境的 web_search 走 Firecrawl (`hermes config set web.provider firecrawl + api_key`); 沒設定時直接改用 HF API, 不要卡在 web_search。
+注意: 執行環境若 web_search 走特定的抓取後端 (需在環境端設定 provider 與 api_key); 沒設定時直接改用 HF API, 不要卡在 web_search。
 
 ## 踩過的坑
 - 官方 workflow 模板引用 int8_convrot/nvfp4 大檔 (要 cu130 / 27G TE), 換 GGUF 方案後要改 UnetLoaderGGUF 節點

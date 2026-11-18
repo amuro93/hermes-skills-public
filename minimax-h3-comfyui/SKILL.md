@@ -120,7 +120,7 @@ SamplerCustomAdvanced → VAEDecode + VAEDecodeAudio → CreateVideo(fps=24) →
 - 所有 URL 交付前用 `curl -sIL -o /dev/null -w "%{http_code}"` 驗證 200
 
 ## 研究/驗證方法 (web_search 掛掉時)
-HF API 直接撈, 不用 Firecrawl:
+HF API 直接撈, 不用 web_search:
 - 搜尋: `https://huggingface.co/api/models?search=minimax+h3`
 - 檔案+大小: `https://huggingface.co/api/models/{repo}/tree/main?recursive=true`
 - README: `https://huggingface.co/{repo}/raw/main/README.md`

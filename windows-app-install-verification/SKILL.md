@@ -41,7 +41,7 @@ metadata:
 
 ```bash
 curl -sIL --max-time 30 "<url>" | grep -i content-length   # 伺服器大小
-stat -c%s "<本機檔>"                                        # 對 byte 數
+wc -c < "<本機檔>"                                          # 對 byte 數（跨平台：macOS 的 stat 沒有 GNU 那組參數）
 ```
 ```powershell
 (Get-AuthenticodeSignature -FilePath "<檔>") | Select-Object Status,@{n='Signer';e={$_.SignerCertificate.Subject}}
